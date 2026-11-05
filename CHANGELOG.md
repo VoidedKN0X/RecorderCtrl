@@ -4,6 +4,19 @@ What changed in each RecorderCtrl release. Every release on the [Releases page](
 
 To publish a new version: bump `versionCode` and `versionName` in `app/build.gradle.kts`, add a section here, and push to `main`. Pushes without a version bump only build; they don't make a release.
 
+## Project updates (2026-11-05, workflows)
+
+No new app version: these changes are to the repo's build workflows only.
+
+### Project
+
+- **Signed build provenance:** every release from now on gets a GitHub build attestation, signed through Sigstore, which proves the APK was built by this repo's workflow from the tagged commit. You can check it with `gh attestation verify`.
+- **Checksum in the release notes:** the release notes end with the APK's SHA-256, so you can check a download before installing it.
+- **Least privilege:** the workflows get no permissions by default; each job gets only what it needs, and only the release job can write to the repo.
+- **Workflow security check:** a new zizmor check runs on every change to the workflows, offline, with zizmor pinned by its checksum.
+- **Code scanning:** CodeQL analyses the app's code every week and on every app change; results go to the repo's Security tab.
+- **Dependency checksums:** a new manually started workflow writes `gradle/verification-metadata.xml`, the list of sha256 checksums every library and build plugin download is checked against.
+
 ## v0.1.1 (2026-11-05)
 
 ### Fixed
