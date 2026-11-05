@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Shell texts for this app -->
+    <string name="settings_subtitle">Recording quality, microphone and privacy</string>
+    <string name="app_lock_subtitle">Ask for an app PIN (and optionally your fingerprint) when opening RecorderCtrl. A recording that\'s running keeps going.</string>
+    <string name="app_lock_footer">RecorderCtrl works fully offline: it has no internet permission, analytics or tracking. Recordings stay in its private storage until you share them or save a copy.</string>
+    <string name="lock_prompt_subtitle">Your recordings</string>
+    <string name="lock_forgot_body">The PIN can\'t be recovered. RecorderCtrl will delete all recordings kept in the app, reset its settings and turn the app lock off. Copies you saved to the Recordings folder are not deleted.</string>
+
+    <!-- Tabs -->
+    <string name="tab_record">Record</string>
+    <string name="tab_recordings">Recordings</string>
+
+    <!-- Record -->
+    <string name="record">Record</string>
+    <string name="pause">Pause</string>
+    <string name="resume">Resume</string>
+    <string name="stop_save">Stop and save</string>
+    <string name="discard">Discard</string>
+    <string name="discard_title">Discard this recording?</string>
+    <string name="discard_body">What you recorded so far is deleted.</string>
+    <string name="status_ready">Ready</string>
+    <string name="status_recording">Recording</string>
+    <string name="status_paused">Paused</string>
+    <string name="status_saving">Saving</string>
+    <string name="stereo_short">Stereo</string>
+    <string name="record_hint">Recording keeps going with the screen off or in another app; the notification has Pause and Stop.</string>
+    <string name="record_failed">Couldn\'t record. Another app may be using the microphone.</string>
+    <string name="mic_denied">RecorderCtrl needs the microphone permission to record. Tap to open its permissions.</string>
+    <string name="record_for_app">Record for an app</string>
+    <string name="default_name">Recording %1$s</string>
+
+    <!-- Recordings -->
+    <string name="no_recordings">No recordings yet</string>
+    <string name="no_recordings_body">Recordings you make in the Record tab show up here.</string>
+    <string name="no_results">No recordings found</string>
+    <string name="search">Search recordings</string>
+    <string name="play">Play</string>
+    <string name="share">Share</string>
+    <string name="save_copy">Save a copy to Recordings</string>
+    <string name="saved_copy">Saved to Recordings/RecorderCtrl</string>
+    <string name="save_copy_failed">Couldn\'t save a copy</string>
+    <string name="rename">Rename</string>
+    <string name="delete">Delete</string>
+    <string name="delete_title">Delete this recording?</string>
+    <string name="delete_body">\"%1$s\" is deleted from RecorderCtrl. Copies you saved or shared are not affected.</string>
+    <string name="speed_x">%1$s×</string>
+    <string name="today_at">Today %1$s</string>
+    <string name="yesterday_at">Yesterday %1$s</string>
+    <string name="no_app">No app on this phone can open that</string>
+
+    <!-- Notification -->
+    <string name="ch_recording">Recording</string>
+    <string name="ch_recording_desc">Shows while RecorderCtrl is recording, with Pause and Stop</string>
+    <string name="notif_recording">Recording</string>
+    <string name="notif_paused">Recording paused</string>
+
+    <!-- Settings -->
+    <string name="group_recording">Recording</string>
+    <string name="recording_footer">Changes apply to the next recording. Recordings are kept in RecorderCtrl\'s private storage; Share or Save a copy hands one to other apps.</string>
+    <string name="quality">Quality</string>
+    <string name="quality_standard">Standard</string>
+    <string name="quality_standard_sub">AAC .m4a, about 45 MB an hour</string>
+    <string name="quality_high">High</string>
+    <string name="quality_high_sub">AAC .m4a, about 85 MB an hour</string>
+    <string name="quality_opus">Small</string>
+    <string name="quality_opus_sub">Opus .ogg, about 30 MB an hour</string>
+    <string name="stereo">Stereo</string>
+    <string name="stereo_sub">Uses two microphones where the phone has them; files are about twice as big</string>
+    <string name="mic_processing">Microphone</string>
+    <string name="source_standard">Standard</string>
+    <string name="source_standard_sub">The phone\'s normal recording sound</string>
+    <string name="source_voice">Voice</string>
+    <string name="source_voice_sub">Less background noise and echo, for talks and notes</string>
+    <string name="source_unprocessed">Unprocessed</string>
+    <string name="source_unprocessed_sub">No filtering, for music</string>
+    <string name="keep_screen_on">Keep screen on</string>
+    <string name="keep_screen_on_sub">While recording on the Record screen</string>
+
+    <plurals name="recordings_count">
+        <item quantity="one">%1$d recording</item>
+        <item quantity="other">%1$d recordings</item>
+    </plurals>
+</resources>
