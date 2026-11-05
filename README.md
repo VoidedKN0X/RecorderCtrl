@@ -68,9 +68,10 @@ Settings and About are behind your profile picture at the top right of every tab
 | Permission | What RecorderCtrl uses it for |
 | --- | --- |
 | Record audio | Recording from the microphone, only while you record. |
-| Foreground service (microphone) | Recording with the screen off or while you use other apps. |
+| Foreground service, and foreground service (microphone) | Recording with the screen off or while you use other apps. Only while a recording is running. |
 | Notifications | The Recording notification with Pause and Stop. |
 | Use biometric hardware | Optional fingerprint unlock for the app lock. |
+| App-internal broadcasts (`com.vknxworks.recorderctrl.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION`) | Added by AndroidX so that only RecorderCtrl itself can send to its own internal receivers. It isn't something you grant and gives no access to anything. |
 
 See [Privacy](#privacy) for what happens to your data.
 
@@ -152,6 +153,7 @@ Native Android apps for self-hosted services and everyday tools, all with the sa
 | [PaperCtrl](https://github.com/VoidedKN0X/PaperCtrl) | Scan and browse documents on Paperless-ngx |
 | [PrintCtrl](https://github.com/VoidedKN0X/PrintCtrl) | Bambu Lab printers through Bambuddy, and Spoolman spools |
 | [ProxCtrl](https://github.com/VoidedKN0X/ProxCtrl) | Manage your Proxmox VE server |
+| **RecorderCtrl** (this app) | Private, offline voice recorder |
 | [RideCtrl](https://github.com/VoidedKN0X/RideCtrl) | Offline maintenance, fuel and mod log for your vehicles |
 | [SeerrCtrl](https://github.com/VoidedKN0X/SeerrCtrl) | Request movies and shows on Seerr / Jellyseerr |
 | [SumCtrl](https://github.com/VoidedKN0X/SumCtrl) | Offline calculator, unit converter and work tools |

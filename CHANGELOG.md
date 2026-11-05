@@ -4,6 +4,16 @@ What changed in each RecorderCtrl release. Every release on the [Releases page](
 
 To publish a new version: bump `versionCode` and `versionName` in `app/build.gradle.kts`, add a section here, and push to `main`. Pushes without a version bump only build; they don't make a release.
 
+## Project updates (2026-11-05)
+
+No new app version: these changes are to the repo, its build checks and its documentation only.
+
+### Project
+
+- **README:** the permissions table also lists the plain foreground-service permission and the app-internal permission AndroidX adds (it only lets RecorderCtrl talk to itself and isn't something you grant), and the Ctrl series list now includes RecorderCtrl itself.
+- **Build:** every build now also checks that the Gradle wrapper in the repo hasn't been tampered with, before anything is compiled.
+- **Repo:** `.gitignore` also keeps `google-services.json` out of the repo, next to the signing files it already covered.
+
 ## v0.1.0 (2026-11-05)
 
 The first release of RecorderCtrl: a private, offline voice recorder in the Ctrl series, made to replace your phone's recorder app on any Android 13+ phone.
