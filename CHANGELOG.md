@@ -4,6 +4,12 @@ What changed in each RecorderCtrl release. Every release on the [Releases page](
 
 To publish a new version: bump `versionCode` and `versionName` in `app/build.gradle.kts`, add a section here, and push to `main`. Pushes without a version bump only build; they don't make a release.
 
+## v0.1.1 (2026-11-05)
+
+### Fixed
+
+- **A running recording is no longer thrown away when another app asks for a recording.** If you were already recording in RecorderCtrl and another app (a messenger, a notes app) opened RecorderCtrl to record something for it, tapping the close button or Back on that screen discarded your running recording. Now that screen only discards a recording it started itself: the one you started in RecorderCtrl keeps recording, with Pause and Stop still in its notification. If you stop and save that recording from the other app's screen, it's saved in RecorderCtrl as usual but isn't handed to the other app.
+
 ## Project updates (2026-11-05)
 
 No new app version: these changes are to the repo, its build checks and its documentation only.

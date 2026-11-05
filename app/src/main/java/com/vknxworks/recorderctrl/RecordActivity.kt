@@ -33,8 +33,16 @@ import com.vknxworks.recorderctrl.ui.record.RecordPanel
  */
 class RecordActivity : ComponentActivity() {
 
+    /**
+     * The file of a recording that was already running (started in RecorderCtrl itself) when this screen opened.
+     * It isn't this screen's to throw away or hand to the other app: Cancel and Back leave it recording.
+     */
+    private var foreignPart: String? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        foreignPart = if (savedInstanceState != null) savedInstanceState.getString(KEY_FOREIGN)
+        else RecorderService.state.value.takeIf { it.active }?.part?.name
         enableEdgeToEdge()
         setContent {
             CtrlWindow(this) {
@@ -57,13 +65,31 @@ class RecordActivity : ComponentActivity() {
         }
     }
 
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putString(KEY_FOREIGN, foreignPart)
+    }
+
+    /** A recording is running, and it was started from this screen (not one that was already running). */
+    private fun ownRecordingActive(): Boolean {
+        val s = RecorderService.state.value
+        return s.active && s.part != null && s.part.name != foreignPart
+    }
+
     private fun cancel() {
-        if (RecorderService.state.value.active) RecorderService.send(this, RecorderService.ACTION_DISCARD)
+        // Never lose a recording: only discard one this screen started.
+        if (ownRecordingActive()) RecorderService.send(this, RecorderService.ACTION_DISCARD)
         setResult(RESULT_CANCELED)
         finish()
     }
 
     private fun done(r: Recording) {
+        // The recording that was already running was saved in RecorderCtrl; it isn't handed to the other app.
+        if (foreignPart != null && r.file == foreignPart!!.removeSuffix(".part")) {
+            setResult(RESULT_CANCELED)
+            finish()
+            return
+        }
         val uri = runCatching { shareUri(this, r, container.recordings.file(r)) }.getOrNull()
         if (uri == null) {
             setResult(RESULT_CANCELED)
@@ -75,6 +101,8 @@ class RecordActivity : ComponentActivity() {
         finish()
     }
 }
+
+private const val KEY_FOREIGN = "foreign_part"
 
 private class CloseNavigator(nav: androidx.navigation.NavHostController, private val onExit: () -> Unit) : Navigator(nav) {
     override fun back() = onExit()
