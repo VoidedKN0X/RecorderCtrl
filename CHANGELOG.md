@@ -4,6 +4,12 @@ What changed in each RecorderCtrl release. Every release on the [Releases page](
 
 To publish a new version: bump `versionCode` and `versionName` in `app/build.gradle.kts`, add a section here, and push to `main`. Pushes without a version bump only build; they don't make a release.
 
+## v0.1.3 (2026-11-05)
+
+### Changed
+
+- **Delete and discard confirmations work with accessibility apps again.** Since 0.1.2 these confirmations, like the lock and PIN screens, were hidden from apps that use accessibility access without being an accessibility tool (automation apps, for example). Now only the lock and PIN screens are hidden from them. Other apps' floating windows are still hidden over the confirmations, as in 0.1.2, and TalkBack works everywhere as before.
+
 ## v0.1.2 (2026-11-05)
 
 ### Security
