@@ -63,6 +63,12 @@ Settings and About are behind your profile picture at the top right of every tab
 
   Advanced users can check it with [AppVerifier](https://github.com/soupslurpr/AppVerifier).
 
+**Check a download.** Every release is built and published by GitHub Actions, never on a personal computer:
+
+- The release notes end with the APK's **SHA-256** checksum. Compare it with `sha256sum RecorderCtrl-vX.Y.Z.apk` (or `Get-FileHash` on Windows).
+- Each release APK has a signed **build provenance attestation**. With the [GitHub CLI](https://cli.github.com/), `gh attestation verify RecorderCtrl-vX.Y.Z.apk -R VoidedKN0X/RecorderCtrl` proves it was built by this repo's workflow from the tagged commit.
+- The signing-certificate fingerprint above stays the same for every release.
+
 **Permissions.** RecorderCtrl has **no internet permission**: it can't go online at all. It asks only for what it needs, when it needs it:
 
 | Permission | What RecorderCtrl uses it for |
@@ -72,6 +78,7 @@ Settings and About are behind your profile picture at the top right of every tab
 | Notifications | The Recording notification with Pause and Stop. |
 | Use biometric hardware | Optional fingerprint unlock for the app lock. |
 | App-internal broadcasts (`com.vknxworks.recorderctrl.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION`) | Added by AndroidX so that only RecorderCtrl itself can send to its own internal receivers. It isn't something you grant and gives no access to anything. |
+| Hide other apps' floating windows over the PIN screen | While the lock or PIN screen, or a delete or reset confirmation, is showing, other apps' floating windows (chat heads, overlays) are hidden over it, so nothing can cover or imitate it. No prompt; overlays work as usual everywhere else. |
 
 See [Privacy](#privacy) for what happens to your data.
 
@@ -120,6 +127,8 @@ You need [Android Studio](https://developer.android.com/studio), or JDK 17 and t
 3. The APK is in `app/build/outputs/apk/debug/`. Copy it to your phone and install it.
 
 Or open the folder in Android Studio and press **Run** with your phone connected.
+
+**Dependency verification.** Every library and build plugin download is checked against the sha256 checksums in `gradle/verification-metadata.xml`, and the build fails on any mismatch. When you change a dependency, a plugin or the Gradle version, run the **Dependency verification metadata** workflow (Actions tab, *Run workflow*), check the diff of the file it prints and commit it in the same push.
 
 ## Support the project
 

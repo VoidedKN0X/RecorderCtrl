@@ -448,6 +448,7 @@ private fun PinLockScreen() {
                 }) { Text(stringResource(R.string.lock_forgot_confirm), color = CtrlColors.Error) }
             },
             dismissButton = { TextButton(onClick = { forgetting = false }) { Text(stringResource(R.string.cancel), color = CtrlColors.Text) } },
+            guard = true,
         )
     }
 }

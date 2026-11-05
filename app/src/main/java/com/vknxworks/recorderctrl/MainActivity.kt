@@ -14,6 +14,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.vknxworks.recorderctrl.ui.lock.AppLockGate
+import com.vknxworks.recorderctrl.ui.lock.GuardWindow
 import com.vknxworks.recorderctrl.ui.lock.lockCovering
 import com.vknxworks.recorderctrl.ui.nav.AppRoot
 import com.vknxworks.recorderctrl.ui.theme.RecorderCtrlTheme
@@ -59,6 +60,8 @@ fun CtrlWindow(activity: ComponentActivity, content: @Composable () -> Unit) {
     val settings by c.settings.settings.collectAsStateWithLifecycle()
     val secure = settings.hideScreenshots || lockCovering(c.vault)
     val blankRecents = settings.hideRecents || c.vault.enabled
+    // No overlays over the lock and PIN screens, and their content hidden from accessibility misuse.
+    GuardWindow(lockCovering(c.vault))
     LaunchedEffect(secure, blankRecents) {
         if (secure) activity.window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
         else activity.window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)

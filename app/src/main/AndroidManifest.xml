@@ -15,15 +15,21 @@
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <!-- Fingerprint unlock for the app lock. -->
     <uses-permission android:name="android.permission.USE_BIOMETRIC" />
+    <!-- Hides other apps' floating windows over the lock, PIN and delete/discard confirmation screens only.
+         Install-time permission, no prompt. -->
+    <uses-permission android:name="android.permission.HIDE_OVERLAY_WINDOWS" />
 
     <uses-feature android:name="android.hardware.microphone" android:required="true" />
 
+    <!-- intentMatchingFlags (Android 16+): other apps can only start RecorderCtrl's exported screens with an
+         intent that matches their filters (the launcher, and "Record audio" with RECORD_SOUND). -->
     <application
         android:name=".RecorderCtrlApp"
         android:allowBackup="false"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="false"
         android:enableOnBackInvokedCallback="true"
+        android:intentMatchingFlags="enforceIntentFilter"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher"

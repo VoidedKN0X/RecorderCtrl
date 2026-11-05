@@ -404,6 +404,7 @@ fun ConfirmDialog(title: String, body: String, confirm: String, onDismiss: () ->
         text = { Text(body, style = MaterialTheme.typography.bodyMedium) },
         confirmButton = { TextButton(onClick = onConfirm) { Text(confirm, color = CtrlColors.Error) } },
         dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel), color = CtrlColors.Text) } },
+        guard = true,
     )
 }
 

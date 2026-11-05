@@ -22,6 +22,10 @@ Voice recorder in the VKNXWorks Ctrl series. Kotlin, Jetpack Compose, Material 3
 - The microphone is used only while a recording is running, through the non-exported `RecorderService`.
 - Never lose a recording: write to `.part` and rename on save; recover readable `.part` files at start.
 
+## Dependency verification
+
+Gradle checks every library and plugin download against the sha256 checksums in `gradle/verification-metadata.xml` (checksums only, no PGP). When a dependency, plugin or the Gradle version changes, start the `verification-metadata.yml` workflow (`gh api -X POST repos/VoidedKN0X/RecorderCtrl/actions/workflows/verification-metadata.yml/dispatches -f ref=main`), take the file from its log (gzipped and base64-encoded between the BEGIN/END markers), check the diff (only Maven Central, Google's Maven and the Gradle plugin portal) and commit it in the same push. Never turn verification off or make it lenient.
+
 ## Releasing
 
 - A release is published only when `versionName` in `app/build.gradle.kts` is bumped. Bump `versionCode` by 1 at the same time.

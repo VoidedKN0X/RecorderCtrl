@@ -43,8 +43,9 @@ jobs:
       - name: Build (debug, no signing key)
         run: |
           chmod +x gradlew
-          # Compiled for real (no build cache) and in-process, so CodeQL sees every Kotlin file.
-          ./gradlew --no-daemon --no-build-cache -Pkotlin.compiler.execution.strategy=in-process assembleDebug
+          # Compiled for real (no build cache) and in-process, so CodeQL sees every Kotlin file. Without CI
+          # set, the build doesn't ask for the release signing key, which this workflow never gets.
+          env -u CI -u GITHUB_ACTIONS ./gradlew --no-daemon --no-build-cache -Pkotlin.compiler.execution.strategy=in-process assembleDebug
 
       - uses: github/codeql-action/analyze@f3bbb05694c2f74569081c28664c0866d64dec21 # v4.39.3
         with:

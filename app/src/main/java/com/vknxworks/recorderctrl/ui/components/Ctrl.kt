@@ -1,5 +1,6 @@
 package com.vknxworks.recorderctrl.ui.components
 
+import com.vknxworks.recorderctrl.ui.lock.GuardWindow
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.BorderStroke
@@ -401,7 +402,10 @@ fun CtrlProgressBar(progress: Float, modifier: Modifier = Modifier, color: Color
 
 // ---------- Dialogs and sheets ----------
 
-/** Dialog on the surface colour, 26dp corners and a 1dp border. */
+/**
+ * Dialog on the surface colour, 26dp corners and a 1dp border. [guard] protects a destructive confirmation
+ * from other apps' overlays while it shows (see [GuardWindow]).
+ */
 @Composable
 fun CtrlAlertDialog(
     onDismissRequest: () -> Unit,
@@ -409,10 +413,14 @@ fun CtrlAlertDialog(
     dismissButton: (@Composable () -> Unit)? = null,
     title: (@Composable () -> Unit)? = null,
     text: (@Composable () -> Unit)? = null,
+    guard: Boolean = false,
 ) {
     AlertDialog(
         onDismissRequest = onDismissRequest,
-        confirmButton = confirmButton,
+        confirmButton = {
+            GuardWindow(guard)
+            confirmButton()
+        },
         dismissButton = dismissButton,
         title = title,
         text = text,
