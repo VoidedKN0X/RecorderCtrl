@@ -4,6 +4,12 @@ What changed in each RecorderCtrl release. Every release on the [Releases page](
 
 To publish a new version: bump `versionCode` and `versionName` in `app/build.gradle.kts`, add a section here, and push to `main`. Pushes without a version bump only build; they don't make a release.
 
+## v0.1.4 (2026-11-05)
+
+### Changed
+
+- **Needs Android 15 or newer.** Android 13 no longer gets security updates and Android 14's updates end in early 2027, so RecorderCtrl now supports Android 15, 16 and 17 only. On older phones the version you have keeps working, but it won't get updates.
+
 ## v0.1.3 (2026-11-05)
 
 ### Changed

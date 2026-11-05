@@ -17,7 +17,7 @@ Voice recorder in the VKNXWorks Ctrl series. Kotlin, Jetpack Compose, Material 3
 - **Telemetry-free:** no analytics or crash reporting.
 - arm64-v8a only. Every user-facing string goes in `strings.xml` (shared Ctrl strings in `strings_ctrl.xml`).
 - Settings open only from the profile picture. No settings tab, menu or gear icon, no You tab.
-- Must work as a normal user app on any ROM (Android 13+), not only when built into the system.
+- Must work as a normal user app on any ROM (Android 15+), not only when built into the system.
 - Recordings stay in private storage; other apps only get a file through Share (one FileProvider grant) or Save a copy.
 - The microphone is used only while a recording is running, through the non-exported `RecorderService`.
 - Never lose a recording: write to `.part` and rename on save; recover readable `.part` files at start.

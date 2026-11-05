@@ -3,7 +3,6 @@ package com.vknxworks.recorderctrl.ui.lock
 import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
-import android.os.Build
 import android.view.View
 import android.view.Window
 import androidx.compose.runtime.Composable
@@ -47,12 +46,10 @@ object ScreenGuard {
     }
 
     private fun markSensitive(window: Window, on: Boolean) {
-        if (Build.VERSION.SDK_INT >= 34) {
-            runCatching {
-                window.decorView.setAccessibilityDataSensitive(
-                    if (on) View.ACCESSIBILITY_DATA_SENSITIVE_YES else View.ACCESSIBILITY_DATA_SENSITIVE_AUTO,
-                )
-            }
+        runCatching {
+            window.decorView.setAccessibilityDataSensitive(
+                if (on) View.ACCESSIBILITY_DATA_SENSITIVE_YES else View.ACCESSIBILITY_DATA_SENSITIVE_AUTO,
+            )
         }
     }
 }
