@@ -4,6 +4,18 @@ What changed in each RecorderCtrl release. Every release on the [Releases page](
 
 To publish a new version: bump `versionCode` and `versionName` in `app/build.gradle.kts`, add a section here, and push to `main`. Pushes without a version bump only build; they don't make a release.
 
+## v0.1.6 (2026-11-13)
+
+A small security and privacy update. Recording, playback and sharing work as before.
+
+### Privacy
+
+- **No debug logging in the app.** Release builds now strip debug, verbose and info log messages from the app and the libraries it uses, so nothing about your recordings can end up in the phone's system log.
+
+### Security
+
+- **Checked build tools.** The build now checks the Gradle download against its published checksum, so a tampered build tool can't slip into a release.
+
 ## v0.1.5 (2026-11-12)
 
 ### Changed
