@@ -9,3 +9,6 @@ import kotlinx.serialization.Serializable
 // Opened from the profile picture: the You page, and Settings from there
 @Serializable data object YouRoute
 @Serializable data object SettingsRoute
+
+// A recording's transcript
+@Serializable data class TranscriptRoute(val id: Long)

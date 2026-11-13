@@ -68,6 +68,14 @@ object Player {
         resume(context)
     }
 
+    /** Plays [r] from [ms] (a tapped transcript line): loads it first when another recording is loaded. */
+    fun playFrom(context: Context, r: Recording, file: File, ms: Long) {
+        if (_state.value.id != r.id || mp == null) toggle(context, r, file)
+        if (_state.value.id != r.id) return
+        seek(ms)
+        if (!_state.value.playing) resume(context)
+    }
+
     private fun resume(context: Context) {
         val p = mp ?: return
         if (RecorderService.state.value.active) return

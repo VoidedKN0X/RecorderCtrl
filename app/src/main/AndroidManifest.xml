@@ -11,6 +11,11 @@
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
+    <!-- Speech to text: turning a recording into text on the phone keeps going with the screen off or in another app
+         (foreground service, media processing; Android limits it to 6 hours a day). The wake lock keeps the processor
+         awake while it runs and is released when it ends. Both are install-time permissions, no prompt. -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PROCESSING" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
     <!-- The "Recording" notification with Pause and Stop. -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <!-- Fingerprint unlock for the app lock. -->
@@ -65,6 +70,12 @@
             android:name=".record.RecorderService"
             android:exported="false"
             android:foregroundServiceType="microphone" />
+
+        <!-- Speech to text with whisper.cpp, on the phone. Only RecorderCtrl starts it. -->
+        <service
+            android:name=".transcribe.TranscribeService"
+            android:exported="false"
+            android:foregroundServiceType="mediaProcessing" />
 
         <!-- Hands one recording at a time to another app, when you share it. -->
         <provider

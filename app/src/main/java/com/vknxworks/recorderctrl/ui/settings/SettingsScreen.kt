@@ -42,6 +42,7 @@ import com.vknxworks.recorderctrl.ui.components.ScreenTopBar
 import com.vknxworks.recorderctrl.ui.lock.AppLock
 import com.vknxworks.recorderctrl.ui.lock.PinRequest
 import com.vknxworks.recorderctrl.ui.lock.findActivity
+import com.vknxworks.recorderctrl.ui.transcript.TranscriptionGroup
 import kotlinx.coroutines.launch
 
 /** Settings, opened from the You page (tap the profile picture). RecorderCtrl follows the phone's dark theme. */
@@ -73,6 +74,7 @@ fun SettingsScreen() {
                 ) { s -> set { it.copy(source = s) } }
                 GroupSwitch(stringResource(R.string.keep_screen_on), stringResource(R.string.keep_screen_on_sub), settings.keepScreenOn, Icons.Outlined.LightMode) { on -> set { it.copy(keepScreenOn = on) } }
             }
+            TranscriptionGroup()
             PrivacyAndSecurityGroup(settings)
         }
     }

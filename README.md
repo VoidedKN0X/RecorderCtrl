@@ -16,6 +16,7 @@ Part of the [Ctrl series](#the-ctrl-series) by VKNXWorks.
 - **Recording** with a timer and live level meter, Pause and Resume, Stop and save, and Discard. It keeps going with the screen off or in another app, with Pause and Stop in the notification
 - **Quality:** Standard and High (AAC .m4a) or Small (Opus .ogg), mono or stereo, and the microphone tuned for normal sound, voice (less noise and echo) or unprocessed for music
 - **Recordings:** a list with name, date, length and size, search, and a player with seeking and 0.75× to 2× speed
+- **Speech to text on the phone** with [whisper.cpp](https://github.com/ggml-org/whisper.cpp): transcribe a recording in the background with progress and Cancel, in the language you pick or detected automatically. The transcript shows every line with its time (tap one to play from there), is searchable from the Recordings tab, and exports as .txt or .srt. You import the model file yourself (RecorderCtrl never downloads anything); nothing is uploaded
 - **Private by default:** recordings are stored in RecorderCtrl's own storage, which other apps can't read. Share one, or save a copy to the phone's Recordings folder, when you want to
 - **Recovers cut-off recordings** when the phone was switched off or the app was stopped while recording, where the file can still be read
 - **Works with other apps:** apps that ask for a voice recording get it from RecorderCtrl, with access to that one file only
@@ -47,7 +48,8 @@ If the Obtainium button doesn't open the app, add `https://github.com/VoidedKN0X
 
 - **Record:** tap Record, allow the microphone, then Pause or Stop and save. The bin discards the recording.
 - **Recordings:** tap a recording to open its player, then play, seek, change the speed, share, save a copy, rename or delete it.
-- **Settings** (profile picture): quality, stereo, the microphone mode and keeping the screen on.
+- **Speech to text:** download a whisper.cpp model such as `ggml-base.bin` (Settings > Speech to text > **Where do I get a model?** opens the page), import it under **Import a model**, then open a recording and tap **Transcribe**. Bigger models (`ggml-small.bin`, `ggml-medium.bin`) are more accurate but slower and need more memory; quantised ones (`q5_1`, `q8_0`) are smaller and faster.
+- **Settings** (profile picture): quality, stereo, the microphone mode, keeping the screen on, and the speech-to-text model and language.
 
 Settings and About are behind your profile picture at the top right of every tab.
 
@@ -75,7 +77,9 @@ Settings and About are behind your profile picture at the top right of every tab
 | --- | --- |
 | Record audio | Recording from the microphone, only while you record. |
 | Foreground service, and foreground service (microphone) | Recording with the screen off or while you use other apps. Only while a recording is running. |
-| Notifications | The Recording notification with Pause and Stop. |
+| Foreground service (media processing) | Speech to text keeps going with the screen off or while you use other apps. Only while a transcription is running; Android limits it to 6 hours a day. |
+| Prevent phone from sleeping | Keeps the processor awake while a transcription runs, released as soon as it ends. |
+| Notifications | The Recording notification with Pause and Stop, and the Transcribing notification with progress and Cancel. |
 | Use biometric hardware | Optional fingerprint unlock for the app lock. |
 | App-internal broadcasts (`com.vknxworks.recorderctrl.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION`) | Added by AndroidX so that only RecorderCtrl itself can send to its own internal receivers. It isn't something you grant and gives no access to anything. |
 | Hide other apps' floating windows over the PIN screen | While the lock or PIN screen, or a delete or reset confirmation, is showing, other apps' floating windows (chat heads, overlays) are hidden over it, so nothing can cover or imitate it. No prompt; overlays work as usual everywhere else. |
@@ -102,6 +106,7 @@ Turn it on under **Settings > Privacy and security > App lock** (tap your profil
 
 - Recordings are stored in RecorderCtrl's private app storage, encrypted with the phone, and can't be read by other apps.
 - Sharing hands the receiving app read access to that one file only. Save a copy puts a copy in Recordings/RecorderCtrl, where other apps with media access can see it.
+- **Speech to text runs on the phone.** The model you import is copied into RecorderCtrl's private storage; recordings and transcripts are never uploaded (RecorderCtrl can't go online). Transcripts are stored next to their recordings and deleted with them. **Where do I get a model?** only opens a web page in your browser.
 - Android backups don't include RecorderCtrl's recordings.
 - RecorderCtrl is left out of Android's cloud backup and its phone-to-phone transfer.
 - The Support, Report a bug, Source code and Licence links on the You page open in your browser, only when you tap them.
@@ -112,7 +117,7 @@ RecorderCtrl is a one-person project by VoidedKN0X (VKNXWorks). Much of the code
 
 ## Build from source
 
-You need [Android Studio](https://developer.android.com/studio), or JDK 17 and the Android SDK.
+You need [Android Studio](https://developer.android.com/studio), or JDK 17 and the Android SDK with the NDK (27.0.12077973) and CMake (3.22.1); Gradle installs them if they're missing. The speech-to-text engine is built from source: whisper.cpp 1.9.5 (commit `d1be6fde11ac6e0407606b4e42fe72d34add8037`) is included in `app/src/main/cpp/whisper.cpp`, trimmed to what the CPU build needs, so nothing is downloaded at build time.
 
 1. Clone the repo:
    ```bash
@@ -184,4 +189,5 @@ Native Android apps for self-hosted services and everyday tools, all with the sa
 
 RecorderCtrl is licensed under the [GNU General Public License v3.0](LICENSE). © VKNXWorks
 
-Fonts, bundled in the app (nothing is downloaded): [Space Grotesk](https://github.com/floriankarsten/space-grotesk) and [JetBrains Mono](https://github.com/JetBrains/JetBrainsMono), both under the SIL Open Font License 1.1 ([FONT-LICENSE-SpaceGrotesk.txt](FONT-LICENSE-SpaceGrotesk.txt), [FONT-LICENSE-JetBrainsMono.txt](FONT-LICENSE-JetBrainsMono.txt)).
+Speech to text uses [whisper.cpp](https://github.com/ggml-org/whisper.cpp) and ggml, © The ggml authors, under the MIT licence ([app/src/main/cpp/whisper.cpp/LICENSE](app/src/main/cpp/whisper.cpp/LICENSE)); the app shows it under **Open-source parts** on the You page.
+, bundled in the app (nothing is downloaded): [Space Grotesk](https://github.com/floriankarsten/space-grotesk) and [JetBrains Mono](https://github.com/JetBrains/JetBrainsMono), both under the SIL Open Font License 1.1 ([FONT-LICENSE-SpaceGrotesk.txt](FONT-LICENSE-SpaceGrotesk.txt), [FONT-LICENSE-JetBrainsMono.txt](FONT-LICENSE-JetBrainsMono.txt)).

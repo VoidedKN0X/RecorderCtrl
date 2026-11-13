@@ -9,6 +9,8 @@ Voice recorder in the VKNXWorks Ctrl series. Kotlin, Jetpack Compose, Material 3
 - `data/Recordings.kt`: files in `filesDir/recordings` (written as `.part`, renamed when saved), the JSON index, recovery of cut-off recordings, Save a copy to MediaStore.
 - `RecordActivity.kt`: RECORD_SOUND for other apps; returns a FileProvider uri with a read grant for that one file.
 - `ui/record`, `ui/list`: the two tabs.
+- Speech to text: `app/src/main/cpp` builds whisper.cpp (vendored, trimmed, tag v1.9.5, commit d1be6fde) and `whisper_jni.cpp` into `librecorderctrl_whisper.so` (arm64-v8a, ARMv8.2-A+fp16+dotprod; `WhisperLib` checks /proc/cpuinfo before loading it). `transcribe/`: `ModelStore` (one imported ggml model in `filesDir/models`, header check in `ModelHeader.kt`), `AudioDecoder` (MediaCodec to 16 kHz mono via `Resampler`), `TranscribeService` (foreground service, type mediaProcessing, wake lock, 5-minute chunks), `Transcript` + `TranscriptWriter` (.txt/.srt). `data/Transcripts.kt` stores `<recording file>.transcript.json` next to the recording. `ui/transcript`: the transcript screen, the Transcribe dialog and Settings > Speech to text.
+- Unit tests (`app/src/test`): resampler, transcript writers, model header check.
 
 ## Hard rules
 
@@ -20,6 +22,7 @@ Voice recorder in the VKNXWorks Ctrl series. Kotlin, Jetpack Compose, Material 3
 - Must work as a normal user app on any ROM (Android 15+), not only when built into the system.
 - Recordings stay in private storage; other apps only get a file through Share (one FileProvider grant) or Save a copy.
 - The microphone is used only while a recording is running, through the non-exported `RecorderService`.
+- Speech to text stays on the phone: models are imported by the user through the system file picker, never downloaded by the app; the only link is the models page opened in the browser. Transcripts live next to their recordings and are deleted with them.
 - Never lose a recording: write to `.part` and rename on save; recover readable `.part` files at start.
 
 ## Dependency verification

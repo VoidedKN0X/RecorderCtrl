@@ -31,6 +31,7 @@ import androidx.compose.material.icons.outlined.SaveAlt
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.SearchOff
 import androidx.compose.material.icons.outlined.Share
+import androidx.compose.material.icons.outlined.Subtitles
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
@@ -64,6 +65,7 @@ import com.vknxworks.recorderctrl.ui.common.share
 import com.vknxworks.recorderctrl.ui.common.sizeText
 import com.vknxworks.recorderctrl.ui.common.whenText
 import com.vknxworks.recorderctrl.ui.components.ConfirmDialog
+import com.vknxworks.recorderctrl.ui.components.CtrlSecondaryButton
 import com.vknxworks.recorderctrl.ui.components.CtrlSquareButton
 import com.vknxworks.recorderctrl.ui.components.CtrlTextField
 import com.vknxworks.recorderctrl.ui.components.MessageView
@@ -74,6 +76,14 @@ import com.vknxworks.recorderctrl.ui.theme.CtrlColors
 import com.vknxworks.recorderctrl.ui.theme.CtrlShapes
 import com.vknxworks.recorderctrl.ui.theme.CtrlType
 import com.vknxworks.recorderctrl.ui.theme.Gutter
+import com.vknxworks.recorderctrl.transcribe.TranscribeJob
+import com.vknxworks.recorderctrl.transcribe.TranscribeService
+import com.vknxworks.recorderctrl.ui.nav.LocalNavigator
+import com.vknxworks.recorderctrl.ui.nav.TranscriptRoute
+import com.vknxworks.recorderctrl.ui.transcript.RunningCard
+import com.vknxworks.recorderctrl.ui.transcript.TranscribeDialog
+import com.vknxworks.recorderctrl.ui.transcript.TranscribeOutcomeToast
+import com.vknxworks.recorderctrl.ui.transcript.startTranscribe
 import kotlinx.coroutines.launch
 
 @Composable
@@ -92,9 +102,17 @@ fun RecordingsScreen() {
         justSaved?.let { open = it; c.justSaved.value = null }
     }
     var renaming by remember { mutableStateOf<Recording?>(null) }
+    var transcribing by remember { mutableStateOf<Recording?>(null) }
+    val texts by c.transcripts.search.collectAsStateWithLifecycle()
+    val job by TranscribeService.state.collectAsStateWithLifecycle()
+    val nav = LocalNavigator.current
+    TranscribeOutcomeToast()
     var deleting by remember { mutableStateOf<Recording?>(null) }
     val q = query.trim().lowercase()
-    val shown = remember(list, q) { if (q.isEmpty()) list else list.filter { it.name.lowercase().contains(q) } }
+    // Search the names and the transcripts.
+    val shown = remember(list, q, texts) {
+        if (q.isEmpty()) list else list.filter { it.name.lowercase().contains(q) || texts[it.file]?.contains(q, ignoreCase = true) == true }
+    }
     val total = list.sumOf { it.durationMs }
 
     LazyColumn(Modifier.fillMaxSize().statusBarsPadding(), contentPadding = PaddingValues(bottom = 24.dp)) {
@@ -128,6 +146,11 @@ fun RecordingsScreen() {
         items(shown, key = { it.id }) { r ->
             RecordingCard(
                 r, expanded = open == r.id, playing = play.id == r.id && play.playing,
+                hasTranscript = texts.containsKey(r.file),
+                snippet = if (q.isNotEmpty() && !r.name.lowercase().contains(q)) texts[r.file]?.let { snippet(it, q) } else null,
+                running = job?.takeIf { it.recordingId == r.id },
+                onTranscribe = { startTranscribe(context, r) { transcribing = r } },
+                onTranscript = { nav.navigate(TranscriptRoute(r.id)) },
                 position = if (play.id == r.id) play.positionMs else 0L,
                 speed = play.speed, canPlay = !rec.active,
                 onToggleOpen = { open = if (open == r.id) null else r.id },
@@ -149,6 +172,7 @@ fun RecordingsScreen() {
         item { Spacer(Modifier.bottomClearance(0.dp)) }
     }
 
+    transcribing?.let { r -> TranscribeDialog(r) { transcribing = null } }
     renaming?.let { r ->
         NameDialog(stringResource(R.string.rename), r.name, onDismiss = { renaming = null }) { name ->
             c.recordings.rename(r, name)
@@ -164,7 +188,11 @@ fun RecordingsScreen() {
             onConfirm = {
                 deleting = null
                 Player.forget(r.id)
-                scope.launch { c.recordings.delete(r) }
+                if (job?.recordingId == r.id) TranscribeService.cancel(context)
+                scope.launch {
+                    c.recordings.delete(r)
+                    c.transcripts.delete(r.file)
+                }
             },
         )
     }
@@ -172,9 +200,19 @@ fun RecordingsScreen() {
 
 private val SPEEDS = listOf(1f, 1.25f, 1.5f, 2f, 0.75f)
 
+/** A few words around the first match of [q] in [text]. */ fun snippet(text: String, q: String, around: Int = 32): String {
+    val i = text.indexOf(q, ignoreCase = true)
+    if (i < 0) return text.take(around * 2)
+    val start = (i - around).coerceAtLeast(0)
+    val end = (i + q.length + around).coerceAtMost(text.length)
+    return (if (start > 0) "…" else "") + text.substring(start, end).trim() + (if (end < text.length) "…" else "")
+}
+
 @Composable
 private fun RecordingCard(
     r: Recording, expanded: Boolean, playing: Boolean, position: Long, speed: Float, canPlay: Boolean,
+    hasTranscript: Boolean, snippet: String?, running: TranscribeJob?,
+    onTranscribe: () -> Unit, onTranscript: () -> Unit,
     onToggleOpen: () -> Unit, onPlay: () -> Unit, onSeek: (Long) -> Unit, onSpeed: (Float) -> Unit,
     onShare: () -> Unit, onSave: () -> Unit, onRename: () -> Unit, onDelete: () -> Unit, modifier: Modifier,
 ) {
@@ -205,7 +243,15 @@ private fun RecordingCard(
                     style = CtrlType.Data, color = CtrlColors.Muted, maxLines = 1,
                 )
             }
+            if (hasTranscript) {
+                Spacer(Modifier.width(8.dp))
+                Icon(Icons.Outlined.Subtitles, stringResource(R.string.transcript), Modifier.size(18.dp), tint = CtrlColors.Muted)
+            }
         }
+        if (snippet != null) {
+            Text(stringResource(R.string.in_transcript, snippet), style = MaterialTheme.typography.bodySmall, color = CtrlColors.Muted, maxLines = 2, overflow = TextOverflow.Ellipsis)
+        }
+        if (running != null) RunningCard(running.progress)
         if (expanded) {
             var dragging by remember { mutableStateOf(false) }
             var dragValue by remember { mutableFloatStateOf(0f) }
@@ -233,6 +279,13 @@ private fun RecordingCard(
                 CtrlSquareButton(Icons.Outlined.Edit, stringResource(R.string.rename), onClick = onRename)
                 Spacer(Modifier.weight(1f))
                 CtrlSquareButton(Icons.Outlined.Delete, stringResource(R.string.delete), onClick = onDelete, tint = CtrlColors.Error)
+            }
+            if (running == null) {
+                CtrlSecondaryButton(onClick = if (hasTranscript) onTranscript else onTranscribe, modifier = Modifier.fillMaxWidth()) {
+                    Icon(Icons.Outlined.Subtitles, null, Modifier.size(20.dp))
+                    Spacer(Modifier.width(10.dp))
+                    Text(stringResource(if (hasTranscript) R.string.transcript else R.string.transcribe), style = MaterialTheme.typography.titleSmall)
+                }
             }
         }
     }

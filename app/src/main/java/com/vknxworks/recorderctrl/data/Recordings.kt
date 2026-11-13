@@ -57,7 +57,7 @@ class Recordings(private val context: Context) {
             val known = saved.filter { File(dir, it.file).isFile }
             val names = known.map { it.file }.toSet()
             val found = dir.listFiles().orEmpty()
-                .filter { it.isFile && !it.name.endsWith(".part") && it.name !in names }
+                .filter { it.isFile && !it.name.endsWith(".part") && !Transcripts.isTranscriptFile(it.name) && it.name !in names }
                 .mapNotNull { f ->
                     durationOf(f).takeIf { it > 0 }?.let { d ->
                         Recording(f.lastModified(), f.name, f.nameWithoutExtension, f.lastModified(), d, f.length(), mimeOf(f.name))
@@ -105,8 +105,10 @@ class Recordings(private val context: Context) {
 
     fun rename(r: Recording, name: String) = change { l -> l.map { if (it.id == r.id) it.copy(name = name.take(80)) else it } }
 
+    /** Deletes the recording and its transcript. */
     suspend fun delete(r: Recording) = withContext(Dispatchers.IO) {
         file(r).delete()
+        Transcripts.deleteFiles(dir, r.file)
         change { l -> l.filter { it.id != r.id } }
     }
 
@@ -133,7 +135,7 @@ class Recordings(private val context: Context) {
         }.getOrNull()
     }
 
-    /** Removes everything ("Forgot PIN"). */
+    /** Removes everything, transcripts included ("Forgot PIN"). */
     suspend fun deleteAll() = withContext(Dispatchers.IO) {
         dir.listFiles().orEmpty().forEach { it.delete() }
         change { emptyList() }

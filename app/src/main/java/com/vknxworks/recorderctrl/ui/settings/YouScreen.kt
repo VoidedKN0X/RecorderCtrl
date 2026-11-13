@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -28,6 +29,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.BugReport
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Code
+import androidx.compose.material.icons.outlined.Description
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.Gavel
 import androidx.compose.material.icons.outlined.PhoneAndroid
@@ -94,6 +96,23 @@ fun YouScreen() {
         runCatching { android.provider.Settings.Global.getString(context.contentResolver, android.provider.Settings.Global.DEVICE_NAME) }.getOrNull()
             ?.takeIf { it.isNotBlank() }
             ?: listOf(Build.MANUFACTURER.replaceFirstChar { it.uppercase() }, Build.MODEL).distinct().joinToString(" ").trim()
+    }
+
+    var showNotices by remember { mutableStateOf(false) }
+    if (showNotices) {
+        val text = remember { runCatching { context.resources.openRawResource(R.raw.licence_whisper_cpp).bufferedReader().use { it.readText() } }.getOrDefault("") }
+        CtrlAlertDialog(
+            onDismissRequest = { showNotices = false },
+            title = { Text(stringResource(R.string.third_party_title), style = MaterialTheme.typography.titleLarge) },
+            text = {
+                Column(Modifier.heightIn(max = 420.dp).verticalScroll(rememberScrollState())) {
+                    Text(stringResource(R.string.third_party_whisper), style = CtrlType.LabelStrong, color = CtrlColors.Text)
+                    Spacer(Modifier.height(8.dp))
+                    Text(text, style = CtrlType.Data, color = CtrlColors.Muted)
+                }
+            },
+            confirmButton = { TextButton(onClick = { showNotices = false }) { Text(stringResource(R.string.lock_ok)) } },
+        )
     }
 
     fun open(url: String) {
@@ -173,6 +192,13 @@ fun YouScreen() {
                     icon = Icons.Outlined.Gavel,
                     value = "GPL-3.0",
                     onClick = { open(LICENCE_URL) },
+                )
+                GroupRow(
+                    stringResource(R.string.third_party_title),
+                    stringResource(R.string.third_party_subtitle),
+                    icon = Icons.Outlined.Description,
+                    value = "MIT",
+                    onClick = { showNotices = true },
                 )
             }
 

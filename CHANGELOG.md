@@ -4,6 +4,27 @@ What changed in each RecorderCtrl release. Every release on the [Releases page](
 
 To publish a new version: bump `versionCode` and `versionName` in `app/build.gradle.kts`, add a section here, and push to `main`. Pushes without a version bump only build; they don't make a release.
 
+## v0.2.0 (2026-11-13)
+
+Speech to text, on your phone. RecorderCtrl can now turn a recording into text with timestamps, without going online.
+
+### New
+
+- **Transcribe a recording.** Open a recording and tap **Transcribe**. It runs on your phone with [whisper.cpp](https://github.com/ggml-org/whisper.cpp) and a model you import; the audio and the text never leave RecorderCtrl. It keeps going with the screen off or in another app, shows its progress in the recording and in a notification, and can be cancelled from both. You get a notification when the transcript is ready. Works with every recording format (Standard, High and Small, mono or stereo).
+- **Language:** detect it automatically, or pick one of the nearly 100 languages whisper knows. The choice is remembered (Settings > Speech to text > Language) and can be changed each time you transcribe. English-only models (`.en`) always transcribe English.
+- **Bring your own model.** RecorderCtrl has no internet access, so it never downloads a model itself. Download a whisper.cpp model on your phone or computer (for example `ggml-base.bin`, or `ggml-small.bin` for better accuracy), then import it under **Settings > Speech to text > Import a model** with the system file picker. **Where do I get a model?** opens the whisper.cpp models page in your browser. RecorderCtrl checks that the file really is a whisper model before it copies it, then shows its name, type and size, with **Replace** and **Delete**.
+- **Read along.** The transcript shows every line with its time. Tap a line to play the recording from there; the line being played is highlighted and the list follows the playback.
+- **Search transcripts.** The search in the Recordings tab now finds words in transcripts as well as in names, and shows where it found them. Recordings with a transcript have a small subtitles mark.
+- **Export:** save a transcript as plain text (.txt) or subtitles (.srt) wherever you choose, or share the text with another app.
+- **Transcripts are kept next to their recordings,** in RecorderCtrl's private storage. Deleting a recording deletes its transcript; you can also delete just the transcript, or transcribe again (for example with a bigger model).
+- **Open-source parts** on the You page shows the licence of whisper.cpp and ggml (MIT).
+
+### Changed
+
+- **Two new install-time permissions, no prompts:** "run foreground service with the type media processing" lets a transcription keep going in the background (Android allows this for up to 6 hours a day), and "prevent phone from sleeping" keeps the processor awake while it runs. Both are used only while a transcription is running.
+- **Bigger download:** the speech-to-text engine adds about 1.7 MB to the app. Models are separate files you import (from about 30 MB for tiny up to about 3 GB for large).
+- Speech to text needs a phone processor with ARMv8.2 and dot product (nearly every phone from 2018 on). On older processors RecorderCtrl says so instead of transcribing.
+
 ## v0.1.6 (2026-11-13)
 
 A small security and privacy update. Recording, playback and sharing work as before.

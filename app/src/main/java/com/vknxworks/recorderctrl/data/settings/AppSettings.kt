@@ -57,6 +57,8 @@ data class AppSettings(
     val hideScreenshots: Boolean = false,
     /** "Hide in recent apps": the Recents view shows a blank card. Screenshots still work. */
     val hideRecents: Boolean = false,
+    /** Speech-to-text: whisper's language code, or "auto" to detect it. */
+    val transcribeLanguage: String = "auto",
 )
 
 class SettingsRepository(private val context: Context, scope: CoroutineScope) {
@@ -68,6 +70,7 @@ class SettingsRepository(private val context: Context, scope: CoroutineScope) {
         val lockTimeout = stringPreferencesKey("lock_timeout")
         val hideScreenshots = booleanPreferencesKey("hide_screenshots")
         val hideRecents = booleanPreferencesKey("hide_recents")
+        val transcribeLanguage = stringPreferencesKey("transcribe_language")
     }
 
     private val prefs: Flow<Preferences> = context.appDataStore.data.catch { e ->
@@ -86,6 +89,7 @@ class SettingsRepository(private val context: Context, scope: CoroutineScope) {
         lockTimeout = enumOr(this[K.lockTimeout], LockTimeout.IMMEDIATELY),
         hideScreenshots = this[K.hideScreenshots] ?: false,
         hideRecents = this[K.hideRecents] ?: false,
+        transcribeLanguage = this[K.transcribeLanguage]?.takeIf { it.isNotBlank() && it.length <= 8 } ?: "auto",
     )
 
     /** Saves a change. If the phone's storage fails, the change is dropped instead of closing the app. */
@@ -100,6 +104,7 @@ class SettingsRepository(private val context: Context, scope: CoroutineScope) {
                 p[K.lockTimeout] = s.lockTimeout.name
                 p[K.hideScreenshots] = s.hideScreenshots
                 p[K.hideRecents] = s.hideRecents
+                p[K.transcribeLanguage] = s.transcribeLanguage
             }
         } catch (e: IOException) {
             // Nothing to do: the settings stay as they were.

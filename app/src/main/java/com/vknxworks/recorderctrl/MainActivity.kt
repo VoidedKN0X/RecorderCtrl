@@ -34,13 +34,22 @@ class MainActivity : ComponentActivity() {
         take(intent)
     }
 
-    /** The recording notification opens the Record tab. */
+    /** The recording notification opens the Record tab; a transcription notification opens that recording. */
     private fun take(intent: Intent?) {
-        if (intent?.action == ACTION_SHOW_RECORD) container.openTab.value = 0
+        when (intent?.action) {
+            ACTION_SHOW_RECORD -> container.openTab.value = 0
+            ACTION_SHOW_RECORDING -> {
+                val id = intent.getLongExtra(EXTRA_RECORDING_ID, -1L)
+                if (id >= 0) container.justSaved.value = id
+                container.openTab.value = 1
+            }
+        }
     }
 
     companion object {
         const val ACTION_SHOW_RECORD = "com.vknxworks.recorderctrl.SHOW_RECORD"
+        const val ACTION_SHOW_RECORDING = "com.vknxworks.recorderctrl.SHOW_RECORDING"
+        const val EXTRA_RECORDING_ID = "recording_id"
     }
 }
 

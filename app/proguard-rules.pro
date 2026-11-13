@@ -19,3 +19,8 @@
     public static int d(...);
     public static int i(...);
 }
+
+# Speech to text: whisper.cpp's JNI functions are found by class and method name (transcribe/WhisperLib.kt).
+-keepclasseswithmembernames,includedescriptorclasses class com.vknxworks.recorderctrl.transcribe.WhisperLib {
+    native <methods>;
+}

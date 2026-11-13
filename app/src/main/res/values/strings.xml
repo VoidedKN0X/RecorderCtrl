@@ -34,7 +34,7 @@
     <string name="no_recordings">No recordings yet</string>
     <string name="no_recordings_body">Recordings you make in the Record tab show up here.</string>
     <string name="no_results">No recordings found</string>
-    <string name="search">Search recordings</string>
+    <string name="search">Search recordings and transcripts</string>
     <string name="play">Play</string>
     <string name="share">Share</string>
     <string name="save_copy">Save a copy to Recordings</string>
@@ -76,6 +76,93 @@
     <string name="source_unprocessed_sub">No filtering, for music</string>
     <string name="keep_screen_on">Keep screen on</string>
     <string name="keep_screen_on_sub">While recording on the Record screen</string>
+
+    <!-- About: open-source parts in the app -->
+    <string name="third_party_title">Open-source parts</string>
+    <string name="third_party_subtitle">whisper.cpp and ggml, for speech to text</string>
+    <string name="third_party_whisper" translatable="false">whisper.cpp 1.9.5 · ggml · MIT License</string>
+
+    <!-- Speech to text: Settings -->
+    <string name="group_transcription">Speech to text</string>
+    <string name="transcription_footer">Transcripts are made on this phone with whisper.cpp and a model file you import. Nothing is uploaded: RecorderCtrl has no internet access. Bigger models are more accurate, but slower and need more memory.</string>
+    <string name="model">Model</string>
+    <string name="model_none">No model yet</string>
+    <string name="model_import">Import a model</string>
+    <string name="model_import_sub">Pick a whisper.cpp model file (ggml-….bin) you downloaded</string>
+    <string name="model_replace">Replace the model</string>
+    <string name="model_replace_sub">Pick another whisper.cpp model file; it replaces this one</string>
+    <string name="model_where">Where do I get a model?</string>
+    <string name="model_where_sub">Opens the whisper.cpp models page in your browser. ggml-base.bin is a good start; ggml-small.bin is more accurate.</string>
+    <string name="model_delete">Delete the model</string>
+    <string name="model_delete_title">Delete the model?</string>
+    <string name="model_delete_body">%1$s (%2$s) is removed from RecorderCtrl. Transcripts you made are kept. Import a model again to transcribe.</string>
+    <string name="model_importing">Copying the model… %1$d%%</string>
+    <string name="model_checking">Checking the file…</string>
+    <string name="model_imported">Model ready: %1$s</string>
+    <string name="model_error_small">That file is too small to be a whisper model.</string>
+    <string name="model_error_big">That file is too big for a whisper model.</string>
+    <string name="model_error_not_ggml">That isn\'t a whisper.cpp model. Pick a ggml .bin file; GGUF, ONNX and other formats don\'t work.</string>
+    <string name="model_error_not_whisper">That\'s a ggml file, but not a whisper speech model.</string>
+    <string name="model_error_space">Not enough free storage to copy the model.</string>
+    <string name="model_error_failed">Couldn\'t copy the model.</string>
+    <string name="model_unsupported">This phone\'s processor is too old for speech to text on the phone: it needs ARMv8.2 with dot product (most phones from 2018 on).</string>
+    <string name="model_big_warning">Large models need several GB of memory and can be very slow on a phone.</string>
+    <string name="model_tiny">Tiny</string>
+    <string name="model_base">Base</string>
+    <string name="model_small">Small</string>
+    <string name="model_medium">Medium</string>
+    <string name="model_large">Large</string>
+    <string name="model_turbo">Large turbo</string>
+    <string name="model_other">Whisper</string>
+    <string name="model_english">English only</string>
+    <string name="model_multilingual">Multilingual</string>
+    <string name="transcribe_language">Language</string>
+    <string name="language_auto">Detect automatically</string>
+
+    <!-- Speech to text: recordings -->
+    <string name="transcribe">Transcribe</string>
+    <string name="transcript">Transcript</string>
+    <string name="transcribe_title">Transcribe this recording?</string>
+    <string name="transcribe_body">Speech to text runs on this phone with %1$s; nothing is uploaded. It can take a while for long recordings. It keeps going with the screen off, and you can cancel it in the notification.</string>
+    <string name="transcribe_need_model">Import a speech-to-text model first: tap your profile picture, then Settings, Speech to text.</string>
+    <string name="transcribe_busy">Another recording is being transcribed. Wait for it to finish or cancel it.</string>
+    <string name="transcribing">Transcribing</string>
+    <string name="transcribe_loading_model">Loading the model</string>
+    <string name="transcribe_percent">%1$d%%</string>
+    <string name="transcribe_done">Transcript ready</string>
+    <string name="transcribe_cancelled">Transcription cancelled</string>
+    <string name="transcribe_error_no_model">No speech-to-text model. Import one in Settings.</string>
+    <string name="transcribe_error_unsupported">This phone\'s processor can\'t run speech to text.</string>
+    <string name="transcribe_error_model">Couldn\'t load the model. It may be damaged, or too big for this phone\'s memory.</string>
+    <string name="transcribe_error_audio">Couldn\'t read this recording\'s audio.</string>
+    <string name="transcribe_error_failed">Transcription failed.</string>
+    <string name="in_transcript">In the transcript: %1$s</string>
+
+    <!-- Speech to text: transcript screen -->
+    <string name="transcript_empty">No speech found</string>
+    <string name="transcript_empty_body">Whisper didn\'t find any words in this recording.</string>
+    <string name="transcript_missing">This recording has no transcript yet.</string>
+    <string name="transcript_hint">Tap a line to play from there.</string>
+    <string name="export_txt">Save as text (.txt)</string>
+    <string name="export_srt">Save as subtitles (.srt)</string>
+    <string name="share_text">Share the text</string>
+    <string name="export">Export</string>
+    <string name="export_saved">Saved</string>
+    <string name="export_failed">Couldn\'t save the file</string>
+    <string name="transcript_delete">Delete the transcript</string>
+    <string name="transcript_delete_title">Delete this transcript?</string>
+    <string name="transcript_delete_body">The transcript of \"%1$s\" is deleted. The recording stays.</string>
+    <string name="transcript_redo">Transcribe again</string>
+    <string name="transcript_language">Language: %1$s</string>
+
+    <!-- Speech to text: notifications -->
+    <string name="ch_transcribing">Transcribing</string>
+    <string name="ch_transcribing_desc">Shows while RecorderCtrl turns a recording into text, with Cancel</string>
+    <string name="ch_transcripts">Transcripts</string>
+    <string name="ch_transcripts_desc">When a transcript is ready, or couldn\'t be made</string>
+    <string name="notif_transcribing">Transcribing a recording</string>
+    <string name="notif_transcript_ready">Transcript ready</string>
+    <string name="notif_transcript_failed">Couldn\'t transcribe</string>
 
     <plurals name="recordings_count">
         <item quantity="one">%1$d recording</item>

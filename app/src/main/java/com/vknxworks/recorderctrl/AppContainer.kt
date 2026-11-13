@@ -2,11 +2,14 @@ package com.vknxworks.recorderctrl
 
 import android.content.Context
 import com.vknxworks.recorderctrl.data.Recordings
+import com.vknxworks.recorderctrl.data.Transcripts
 import com.vknxworks.recorderctrl.data.lock.LockVault
 import com.vknxworks.recorderctrl.data.settings.AppSettings
 import com.vknxworks.recorderctrl.data.settings.SettingsRepository
 import com.vknxworks.recorderctrl.record.Player
 import com.vknxworks.recorderctrl.record.RecorderService
+import com.vknxworks.recorderctrl.transcribe.ModelStore
+import com.vknxworks.recorderctrl.transcribe.TranscribeService
 import com.vknxworks.recorderctrl.ui.lock.AppLock
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
@@ -24,6 +27,12 @@ class AppContainer(val context: Context) {
     val settings = SettingsRepository(context, appScope)
     val recordings = Recordings(context)
 
+    /** Transcripts, next to the recordings. */
+    val transcripts = Transcripts(recordings)
+
+    /** The speech-to-text model the user imported. */
+    val models = ModelStore(context)
+
     /** Which tab to open (from the recording notification). */
     val openTab = MutableStateFlow<Int?>(null)
 
@@ -34,7 +43,11 @@ class AppContainer(val context: Context) {
     val vault = LockVault(context, "recorderctrl")
 
     init {
-        appScope.launch { recordings.load(RecorderService.state.value.part) }
+        appScope.launch {
+            recordings.load(RecorderService.state.value.part)
+            transcripts.load()
+        }
+        appScope.launch { models.load() }
         AppLock.onLocked = { onLocked() }
     }
 
@@ -54,7 +67,9 @@ class AppContainer(val context: Context) {
     suspend fun forgetEverything() {
         if (RecorderService.state.value.active) RecorderService.send(context, RecorderService.ACTION_DISCARD)
         Player.stop()
+        TranscribeService.cancel(context)
         recordings.deleteAll()
+        transcripts.clear()
         settings.update { AppSettings() }
         vault.disable()
         AppLock.markUnlocked()

@@ -69,6 +69,7 @@ import com.vknxworks.recorderctrl.ui.record.RecordScreen
 import com.vknxworks.recorderctrl.ui.settings.SettingsScreen
 import com.vknxworks.recorderctrl.ui.settings.YouScreen
 import com.vknxworks.recorderctrl.ui.theme.CtrlColors
+import com.vknxworks.recorderctrl.ui.transcript.TranscriptScreen
 
 @Composable
 fun AppRoot() {
@@ -189,5 +190,6 @@ private fun AppNavHost(navController: NavHostController) {
         composable<RecordingsRoute> { RecordingsScreen() }
         composable<YouRoute> { YouScreen() }
         composable<SettingsRoute> { SettingsScreen() }
+        composable<TranscriptRoute> { TranscriptScreen(it.toRoute<TranscriptRoute>().id) }
     }
 }
