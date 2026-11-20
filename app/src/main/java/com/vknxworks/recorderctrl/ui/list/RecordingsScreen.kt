@@ -175,7 +175,8 @@ fun RecordingsScreen() {
     transcribing?.let { r -> TranscribeDialog(r) { transcribing = null } }
     renaming?.let { r ->
         NameDialog(stringResource(R.string.rename), r.name, onDismiss = { renaming = null }) { name ->
-            c.recordings.rename(r, name)
+            // Saved in the background (the app's own scope, so leaving this screen can't cancel it).
+            c.appScope.launch { c.recordings.rename(r, name) }
             renaming = null
         }
     }

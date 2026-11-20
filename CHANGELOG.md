@@ -4,6 +4,14 @@ What changed in each RecorderCtrl release. Every release on the [Releases page](
 
 To publish a new version: bump `versionCode` and `versionName` in `app/build.gradle.kts`, add a section here, and push to `main`. Pushes without a version bump only build; they don't make a release.
 
+## Unreleased
+
+Built and checked by CI only: nothing here had been run on a phone when it was written.
+
+### Changed
+
+- **Renaming a recording no longer makes the screen wait for storage.** The list of recordings (which is encrypted and written safely to disk on every change) was saved on the screen's own thread when you renamed a recording, and had to wait its turn if the app was still reading the recordings just after opening. It is now saved in the background, like adding and deleting a recording already were. The new name shows a moment after you confirm it instead of in the very same instant; nothing else changes.
+
 ## v0.3.0 (2026-11-20)
 
 **This release encrypts some of what the app stores on the phone. An older version cannot read it afterwards, so export or back up anything you need before you update (details below).** Built and checked by CI only: nothing in this release had been run on a phone when it was published.

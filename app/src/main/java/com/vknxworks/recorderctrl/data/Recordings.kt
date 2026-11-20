@@ -189,7 +189,10 @@ class Recordings(private val context: Context, private val keys: DataKeyStore) {
         r
     }
 
-    fun rename(r: Recording, name: String) = change { l -> l.map { if (it.id == r.id) it.copy(name = name.take(80)) else it } }
+    /** Renames a recording. The index is written (and encrypted) on a background thread, never on the screen's thread. */
+    suspend fun rename(r: Recording, name: String) = withContext(Dispatchers.IO) {
+        change { l -> l.map { if (it.id == r.id) it.copy(name = name.take(80)) else it } }
+    }
 
     /** Deletes the recording and its transcript. */
     suspend fun delete(r: Recording) = withContext(Dispatchers.IO) {
