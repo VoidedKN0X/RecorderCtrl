@@ -11,6 +11,10 @@ Built and checked by CI only: nothing here had been run on a phone when it was w
 ### Changed
 
 - **Renaming a recording no longer makes the screen wait for storage.** The list of recordings (which is encrypted and written safely to disk on every change) was saved on the screen's own thread when you renamed a recording, and had to wait its turn if the app was still reading the recordings just after opening. It is now saved in the background, like adding and deleting a recording already were. The new name shows a moment after you confirm it instead of in the very same instant; nothing else changes.
+- **Newer build tools and libraries; nothing changes in how RecorderCtrl looks or works.** RecorderCtrl is now built with the current stable toolchain: Android Gradle Plugin 8.11.1 → 9.5.1, Gradle 8.14.3 → 9.9.2, Kotlin 2.2.0 → 2.4.21 (with its Compose and serialization compiler plugins) and Compose BOM 2025.07.00 → 2026.09.00 (Compose 1.12.1, Material 3 1.4.0). The libraries move to the versions the newest Ctrl apps use: AndroidX Activity 1.10.1 → 1.13.0, Core 1.16.0 → 1.18.0, Lifecycle 2.9.1 → 2.10.0, Navigation 2.9.1 → 2.9.8, DataStore 1.1.7 → 1.3.0, kotlinx.serialization 1.9.0 → 1.13.0 and kotlinx.coroutines 1.10.2 → 1.11.0. No library was added, and the app is still Google-free and offline (CI checks both).
+- **Compiled against the Android 17 SDK.** Compose 1.12 needs `compileSdk` 37, so that goes from 36 to 37. The Android versions RecorderCtrl runs on and targets are unchanged (`minSdk` 35, `targetSdk` 36), so Android treats the app exactly as before.
+- **The app is shrunk by a newer R8.** Android Gradle Plugin 9 compiles Kotlin itself (the separate Kotlin Android plugin is gone from the build files) and brings the R8 version that understands Kotlin 2.4. RecorderCtrl's own keep rules are unchanged.
+- The checksums Gradle verifies every download against (`gradle/verification-metadata.xml`) were regenerated on CI for the new versions. Built and checked by CI only; not yet run on a phone.
 
 ### Security
 
