@@ -10,7 +10,7 @@ Voice recorder in the VKNXWorks Ctrl series. Kotlin, Jetpack Compose, Material 3
 - `RecordActivity.kt`: RECORD_SOUND for other apps; returns a FileProvider uri with a read grant for that one file.
 - `ui/record`, `ui/list`: the two tabs.
 - Speech to text: `app/src/main/cpp` builds whisper.cpp (vendored, trimmed, tag v1.9.5, commit d1be6fde) and `whisper_jni.cpp` into `librecorderctrl_whisper.so` (arm64-v8a, ARMv8.2-A+fp16+dotprod; `WhisperLib` checks /proc/cpuinfo before loading it). `transcribe/`: `ModelStore` (one imported ggml model in `filesDir/models`, header check in `ModelHeader.kt`), `AudioDecoder` (MediaCodec to 16 kHz mono via `Resampler`), `TranscribeService` (foreground service, type mediaProcessing, wake lock, 5-minute chunks), `Transcript` + `TranscriptWriter` (.txt/.srt). `data/Transcripts.kt` stores `<recording file>.transcript.json` next to the recording. `ui/transcript`: the transcript screen, the Transcribe dialog and Settings > Speech to text.
-- Unit tests (`app/src/test`): resampler, transcript writers, model header check.
+- Unit tests (`app/src/test`): resampler, transcript writers, model header check, the sealed file format.
 
 ## Hard rules
 
@@ -24,6 +24,16 @@ Voice recorder in the VKNXWorks Ctrl series. Kotlin, Jetpack Compose, Material 3
 - The microphone is used only while a recording is running, through the non-exported `RecorderService`.
 - Speech to text stays on the phone: models are imported by the user through the system file picker, never downloaded by the app; the only link is the models page opened in the browser. Transcripts live next to their recordings and are deleted with them.
 - Never lose a recording: write to `.part` and rename on save; recover readable `.part` files at start.
+
+## Encryption at rest
+
+- `recordings.json` (the index) and `recordings/*.transcript.json` are sealed with AES-256-GCM (`data/crypto/SealedFile`, marker `RECORDERCTRL-REST1`) under the data key (`DataKeyStore`: 32 random bytes in `filesDir/data.key`, wrapped by the Keystore key `recorderctrl_data_at_rest` through `KeystoreWrapper`/`KeystoreAes`; no user authentication, so `TranscribeService` can save with the screen off; independent of the app lock).
+- **Not sealed, on purpose:** the audio files (written by MediaRecorder during capture; opened by path by `Player`, `AudioDecoder` and `MediaMetadataRetriever`; handed to other apps as a FileProvider uri by Share and `RecordActivity`; can be far over the ~32 MB an in-memory AES-GCM pass allows), `.part` files, the model in `filesDir/models` (opened by whisper.cpp by path), DataStore settings and the app lock vault. Don't seal the audio without a streaming design for all of those paths.
+- Readers accept both sealed and ordinary files (`SealedFile.isSealed`). Without a data key the app reads and writes ordinary files as before. The key is fetched in `Recordings.load`/`Transcripts.load` on `Dispatchers.IO`; never add Keystore work on the main thread.
+- An ordinary file only becomes a sealed one through `SealedFile.sealInPlace` (temp file, sync, read back, compare, atomic rename), under `Recordings.lock` (index) or `Transcripts.fileLock` (transcripts; also held for saves and deletes). Never replace an existing `data.key`; never create a Keystore key on the decrypt path (`KeystoreAes.existing`).
+- A sealed file that can't be opened is never overwritten: a transcript shows in `Transcripts.unreadable` (the transcript screen's "Can't open this transcript") and is renamed to `*.transcript.json.unreadable` before a new one is saved; the index is renamed to `recordings.json.unreadable`, rebuilt from the audio files, and its names are merged back when it opens at a later start.
+- Transcript exports (.txt/.srt/share text) and recording share/Save a copy stay ordinary formats.
+- `SealedFileTest` covers the format, the migration step and the key rules (`./gradlew :app:testDebugUnitTest`; CI only runs `assembleRelease`, so it isn't run there).
 
 ## Dependency verification
 

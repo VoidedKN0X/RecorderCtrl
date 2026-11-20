@@ -100,6 +100,7 @@ fun TranscriptScreen(recordingId: Long) {
     val list by c.recordings.list.collectAsStateWithLifecycle()
     val r = list.firstOrNull { it.id == recordingId }
     val index by c.transcripts.search.collectAsStateWithLifecycle()
+    val unreadable by c.transcripts.unreadable.collectAsStateWithLifecycle()
     val job by TranscribeService.state.collectAsStateWithLifecycle()
     val play by Player.state.collectAsStateWithLifecycle()
     val rec by RecorderService.state.collectAsStateWithLifecycle()
@@ -141,6 +142,13 @@ fun TranscriptScreen(recordingId: Long) {
         }
         val t = transcript
         when {
+            // Stored encrypted and can't be opened: said so, instead of "no transcript yet". The file is left as it is.
+            t == null && running == null && r.file in unreadable -> MessageView(
+                Icons.Outlined.SubtitlesOff, stringResource(R.string.transcript_unreadable),
+                stringResource(R.string.transcript_unreadable_body),
+                actionLabel = stringResource(R.string.transcript_unreadable_retry),
+                onAction = { scope.launch { c.transcripts.retry() } },
+            )
             t == null && running == null -> MessageView(
                 Icons.Outlined.Subtitles, stringResource(R.string.transcript_missing),
                 actionLabel = stringResource(R.string.transcribe),

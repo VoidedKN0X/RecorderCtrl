@@ -3,6 +3,8 @@ package com.vknxworks.recorderctrl
 import android.content.Context
 import com.vknxworks.recorderctrl.data.Recordings
 import com.vknxworks.recorderctrl.data.Transcripts
+import com.vknxworks.recorderctrl.data.crypto.DataKeyStore
+import com.vknxworks.recorderctrl.data.crypto.KeystoreWrapper
 import com.vknxworks.recorderctrl.data.lock.LockVault
 import com.vknxworks.recorderctrl.data.settings.AppSettings
 import com.vknxworks.recorderctrl.data.settings.SettingsRepository
@@ -25,10 +27,17 @@ class AppContainer(val context: Context) {
     val appScope = CoroutineScope(SupervisorJob() + Dispatchers.Main + CoroutineExceptionHandler { _, _ -> })
 
     val settings = SettingsRepository(context, appScope)
-    val recordings = Recordings(context)
+
+    /**
+     * The key the transcripts and the recordings index are encrypted with at rest. Nothing is asked of the phone's
+     * secure hardware here: that happens on a background thread, when the recordings are first read.
+     */
+    private val dataKeys = DataKeyStore(context.filesDir, KeystoreWrapper("recorderctrl_data_at_rest"))
+
+    val recordings = Recordings(context, dataKeys)
 
     /** Transcripts, next to the recordings. */
-    val transcripts = Transcripts(recordings)
+    val transcripts = Transcripts(recordings, dataKeys)
 
     /** The speech-to-text model the user imported. */
     val models = ModelStore(context)

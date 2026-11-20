@@ -7,6 +7,8 @@ import android.net.Uri
 import android.os.Environment
 import android.provider.MediaStore
 import android.util.AtomicFile
+import com.vknxworks.recorderctrl.data.crypto.DataKeyStore
+import com.vknxworks.recorderctrl.data.crypto.SealedFile
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -31,15 +33,23 @@ data class Recording(
 /**
  * The recordings: audio files in the app's private folder (encrypted with the phone, invisible to other apps), and
  * a small index with their names and lengths. Other apps only get a recording when you share or save a copy.
+ *
+ * The index (`recordings.json`) is encrypted at rest with the app's data key ([DataKeyStore], [SealedFile]); the audio
+ * files are not (the player, the decoder and other apps open them by path or link). An index from before encryption
+ * is still read and then replaced by its encrypted copy; without a data key the ordinary file is used as before.
  */
-class Recordings(private val context: Context) {
+class Recordings(private val context: Context, private val keys: DataKeyStore) {
     private val json = Json { ignoreUnknownKeys = true; encodeDefaults = true }
     private val lock = Any()
     private val _list = MutableStateFlow<List<Recording>>(emptyList())
     val list: StateFlow<List<Recording>> = _list
 
     val dir: File get() = File(context.filesDir, "recordings").apply { mkdirs() }
-    private val index get() = AtomicFile(File(context.filesDir, "recordings.json"))
+    private val indexFile get() = File(context.filesDir, INDEX)
+    private val index get() = AtomicFile(indexFile)
+
+    /** An index that can't be opened couldn't be moved aside: nothing is written over it in this run. */
+    @Volatile private var indexBlocked = false
 
     fun file(r: Recording) = File(dir, r.file)
 
@@ -49,7 +59,28 @@ class Recordings(private val context: Context) {
      */
     suspend fun load(active: File? = null) = withContext(Dispatchers.IO) {
         synchronized(lock) {
-            val saved = runCatching { json.decodeFromString<List<Recording>>(String(index.readFully(), Charsets.UTF_8)) }.getOrDefault(emptyList())
+            // The data key is fetched (or made) here, on a background thread, before anything needs it.
+            val key = keys.get(create = true)
+            val bytes = runCatching { index.readFully() }.getOrNull()
+            val wasSealed = bytes != null && SealedFile.isSealed(bytes)
+            val plain = if (bytes != null && wasSealed) open(bytes) else bytes
+            if (wasSealed && plain == null) {
+                // Encrypted and can't be opened: kept aside, never overwritten. The list is built again from the audio files.
+                if (!moveIndexAside()) indexBlocked = true
+            }
+            val onDisk = plain?.let(::decode) ?: emptyList()
+            // An index that was set aside earlier and opens again gives the names back.
+            val recovered = runCatching { recoverAside() }.getOrDefault(emptyList())
+            var saved = onDisk
+            for ((_, old) in recovered) {
+                val byFile = old.associateBy { it.file }
+                val have = saved.map { it.file }.toSet()
+                saved = saved.map { cur ->
+                    val was = byFile[cur.file]
+                    // Only over an entry that was rebuilt from the file (named after it), never over a name the user chose since.
+                    if (was != null && cur.name == File(cur.file).nameWithoutExtension) was else cur
+                } + old.filter { it.file !in have }
+            }
             // A recording interrupted by a crash or power loss: keep it if Android can still read it.
             dir.listFiles().orEmpty().filter { it.name.endsWith(".part") && it.absolutePath != active?.absolutePath }.forEach { part ->
                 if (durationOf(part) <= 0 || !part.renameTo(File(dir, part.name.removeSuffix(".part")))) part.delete()
@@ -65,25 +96,80 @@ class Recordings(private val context: Context) {
                 }
             val all = (known + found).distinctBy { it.file }.sortedByDescending { it.createdAt }
             _list.value = all
-            if (all != saved) write(all)
+            if (all != onDisk) {
+                if (write(all)) recovered.forEach { runCatching { it.first.delete() } }
+            } else if (bytes != null && !wasSealed && key != null) {
+                // An ordinary index from before encryption: replaced by its encrypted copy, or left as it is.
+                try {
+                    SealedFile.sealInPlace(key, indexFile, File(context.filesDir, INDEX_SEAL_TMP))
+                } catch (e: Throwable) {
+                    // The ordinary file stays in use.
+                }
+            }
         }
     }
 
-    private fun write(list: List<Recording>) {
-        val f = index
-        val out = runCatching { f.startWrite() }.getOrNull() ?: return
+    /** Sealed bytes opened with the data key, or null when there is no key or it doesn't open them. */
+    private fun open(sealed: ByteArray): ByteArray? {
+        val key = keys.get(create = false) ?: return null
+        return try {
+            SealedFile.open(key, sealed)
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    private fun decode(plain: ByteArray): List<Recording>? =
+        runCatching { json.decodeFromString(ListSerializer(Recording.serializer()), String(plain, Charsets.UTF_8)) }.getOrNull()
+
+    /** Moves the index out of the way without deleting it (or an earlier one set aside). False when that fails. */
+    private fun moveIndexAside(): Boolean = try {
+        var aside = File(context.filesDir, INDEX_ASIDE)
+        if (aside.exists()) aside = File(context.filesDir, "$INDEX_ASIDE.${System.currentTimeMillis()}")
+        indexFile.renameTo(aside)
+    } catch (e: Exception) {
+        false
+    }
+
+    private fun asideIndexes(): List<File> =
+        context.filesDir.listFiles().orEmpty().filter { it.isFile && it.name.startsWith(INDEX_ASIDE) }.sortedBy { it.name }
+
+    /** The indexes kept aside that open now, each with its file. */
+    private fun recoverAside(): List<Pair<File, List<Recording>>> = asideIndexes().mapNotNull { f ->
         try {
-            out.write(json.encodeToString(ListSerializer(Recording.serializer()), list).toByteArray(Charsets.UTF_8))
+            val bytes = f.readBytes()
+            if (!SealedFile.isSealed(bytes)) return@mapNotNull null
+            val list = open(bytes)?.let(::decode) ?: return@mapNotNull null
+            f to list
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    /** Writes the index in one step: encrypted when there's a data key, the ordinary file otherwise. True when it worked. */
+    private fun write(list: List<Recording>): Boolean {
+        if (indexBlocked) return false
+        val plain = runCatching { json.encodeToString(ListSerializer(Recording.serializer()), list).toByteArray(Charsets.UTF_8) }.getOrNull()
+            ?: return false
+        val bytes = keys.get(create = true)?.let { SealedFile.sealChecked(it, plain) } ?: plain
+        val f = index
+        val out = runCatching { f.startWrite() }.getOrNull() ?: return false
+        return try {
+            out.write(bytes)
             f.finishWrite(out)
+            true
         } catch (e: Exception) {
             f.failWrite(out)
+            false
         }
     }
 
-    private fun change(f: (List<Recording>) -> List<Recording>) = synchronized(lock) {
-        val next = f(_list.value).sortedByDescending { it.createdAt }
-        _list.value = next
-        write(next)
+    private fun change(f: (List<Recording>) -> List<Recording>) {
+        synchronized(lock) {
+            val next = f(_list.value).sortedByDescending { it.createdAt }
+            _list.value = next
+            write(next)
+        }
     }
 
     /** A new file to record into; it gets its real name when the recording is saved. */
@@ -137,11 +223,23 @@ class Recordings(private val context: Context) {
 
     /** Removes everything, transcripts included ("Forgot PIN"). */
     suspend fun deleteAll() = withContext(Dispatchers.IO) {
-        dir.listFiles().orEmpty().forEach { it.delete() }
+        synchronized(Transcripts.fileLock) { dir.listFiles().orEmpty().forEach { it.delete() } }
+        synchronized(lock) {
+            // Deleting everything includes an index that was kept aside because it couldn't be opened.
+            runCatching { asideIndexes().forEach { it.delete() } }
+            if (indexBlocked) {
+                runCatching { indexFile.delete() }
+                indexBlocked = false
+            }
+        }
         change { emptyList() }
     }
 
     companion object {
+        private const val INDEX = "recordings.json"
+        private const val INDEX_SEAL_TMP = "recordings.json.seal.tmp"
+        private const val INDEX_ASIDE = "recordings.json.unreadable"
+
         fun durationOf(f: File): Long = runCatching {
             MediaMetadataRetriever().use { m ->
                 m.setDataSource(f.absolutePath)

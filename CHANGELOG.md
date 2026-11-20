@@ -4,6 +4,21 @@ What changed in each RecorderCtrl release. Every release on the [Releases page](
 
 To publish a new version: bump `versionCode` and `versionName` in `app/build.gradle.kts`, add a section here, and push to `main`. Pushes without a version bump only build; they don't make a release.
 
+## Unreleased
+
+Not released yet (no version number). Built and checked by CI only: none of this has been run on a phone.
+
+### Security
+
+- **Transcripts and the list of recordings are now encrypted on the phone.** Every transcript (`<recording>.transcript.json`) and the index that holds your recordings' names, dates and lengths (`recordings.json`) are sealed with AES-256-GCM under a random 256-bit data key. That key is stored in `data.key` in RecorderCtrl's private storage, itself encrypted by a key in the phone's secure hardware (Android Keystore, StrongBox when the phone has it) that can't be exported. This protects those files when they are copied off the phone (a backup image, a forensic copy, a rooted file manager); it does not protect against something already running inside RecorderCtrl while the app is open. The key needs no fingerprint or PIN, so a transcript can still be saved with the screen off, and it is independent of the app lock.
+- **The audio itself is deliberately not encrypted by this change.** Recordings stay ordinary audio files in RecorderCtrl's private storage (still protected by the phone's own storage encryption and invisible to other apps). The reasons: the recorder writes them while recording and that path must not change; Android's player, the speech-to-text decoder and the length check open them by file path; Share and "record a sound for another app" hand another app a link straight to the file; and long recordings are far larger than can be decrypted in memory in one piece. The imported speech-to-text model (hundreds of megabytes, opened by whisper.cpp by path, not personal) and the settings are not encrypted either. The app lock's own storage is unchanged.
+- **The move is automatic and can't lose a transcript.** When this version starts, each existing transcript and the index are read as before. An encrypted copy is then written to a temporary file, synced to disk, read back, decrypted and compared byte for byte; only when it matches does it take the old file's place, in one step. If anything goes wrong the old file stays in use and RecorderCtrl tries again at the next start. Both kinds of file are read from now on. All of this runs in the background, not on the screen's thread.
+- **If an encrypted transcript can't be opened** (the key is missing from the phone's secure storage, or the file is damaged), it is not deleted or overwritten. The transcript screen says "Can't open this transcript" with **Try again**, and the recording itself still plays, shares and exports normally. You can make a new transcript with **Transcribe** in the Recordings list; the one that can't be opened is then kept aside as `<recording>.transcript.json.unreadable`. Deleting the recording or the transcript deletes it as well.
+- **If the encrypted list of recordings can't be opened**, it is kept aside as `recordings.json.unreadable` and the list is built again from the audio files, as RecorderCtrl already did for a missing index: every recording is still there, but shows its file name (`rec_...`) instead of the name you gave it. If the key works again at a later start, the names come back by themselves. "Forgot PIN?" deletes a list that was kept aside along with everything else.
+- **Without a working key** (the phone's secure hardware can't provide one) RecorderCtrl keeps reading and writing ordinary files exactly as before.
+- **Exports are unchanged.** Exporting a transcript as .txt or .srt, sharing its text, sharing a recording and Save a copy produce the same ordinary files as before.
+- **No going back to an older version with your transcripts.** RecorderCtrl 0.2.1 and older can't read the encrypted files: they show no transcripts and file names instead of your recording names, and rewrite the index. Export the transcripts you need (.txt or .srt) before installing an older version. The recordings themselves are not affected.
+
 ## v0.2.1 (2026-11-20)
 
 Built and checked by CI only: nothing in this release had been run on a phone when it was published.

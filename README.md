@@ -105,6 +105,7 @@ Turn it on under **Settings > Privacy and security > App lock** (tap your profil
 **Telemetry-free.** RecorderCtrl has no analytics, crash reporting, usage stats or tracking of any kind. It has **no internet permission**, works fully offline and never connects to the internet. Every build checks that the app has no network permission and no Google libraries.
 
 - Recordings are stored in RecorderCtrl's private app storage, encrypted with the phone, and can't be read by other apps.
+- Transcripts and the list of your recordings (names, dates, lengths) are also encrypted by RecorderCtrl itself (AES-256-GCM, with a key protected by the phone's secure hardware), which protects them if the files are ever copied off the phone. The audio files are not encrypted a second time: they rely on the phone's storage encryption. This works without a PIN and is separate from the app lock.
 - Sharing hands the receiving app read access to that one file only. Save a copy puts a copy in Recordings/RecorderCtrl, where other apps with media access can see it.
 - **Speech to text runs on the phone.** The model you import is copied into RecorderCtrl's private storage; recordings and transcripts are never uploaded (RecorderCtrl can't go online). Transcripts are stored next to their recordings and deleted with them. **Where do I get a model?** only opens a web page in your browser.
 - Android backups don't include RecorderCtrl's recordings.

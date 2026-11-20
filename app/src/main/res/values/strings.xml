@@ -143,6 +143,9 @@
     <string name="transcript_empty">No speech found</string>
     <string name="transcript_empty_body">Whisper didn\'t find any words in this recording.</string>
     <string name="transcript_missing">This recording has no transcript yet.</string>
+    <string name="transcript_unreadable">Can\'t open this transcript</string>
+    <string name="transcript_unreadable_body">This transcript is stored encrypted on this phone, and the key that opens it is missing from the phone\'s secure storage or no longer matches. Nothing has been deleted. Try again first; restarting the phone can help too. You can also make a new transcript with Transcribe in the Recordings list: the one that can\'t be opened is then kept aside, not deleted.</string>
+    <string name="transcript_unreadable_retry">Try again</string>
     <string name="transcript_hint">Tap a line to play from there.</string>
     <string name="export_txt">Save as text (.txt)</string>
     <string name="export_srt">Save as subtitles (.srt)</string>
