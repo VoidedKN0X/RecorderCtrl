@@ -30,6 +30,7 @@ import androidx.compose.material.icons.outlined.MicOff
 import androidx.compose.material.icons.outlined.Pause
 import androidx.compose.material.icons.outlined.PlayArrow
 import androidx.compose.material.icons.outlined.Stop
+import androidx.compose.material.icons.outlined.Storage
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -40,6 +41,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -77,7 +79,9 @@ import com.vknxworks.recorderctrl.ui.theme.CtrlColors
 import com.vknxworks.recorderctrl.ui.theme.CtrlShapes
 import com.vknxworks.recorderctrl.ui.theme.CtrlType
 import com.vknxworks.recorderctrl.ui.theme.Gutter
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.withContext
 
 /** The Record tab. */
 @Composable
@@ -88,6 +92,9 @@ fun RecordScreen(onSaved: (Recording) -> Unit) {
         Spacer(Modifier.bottomClearance())
     }
 }
+
+/** Below this much free storage the Record screen shows a warning (roughly 40 minutes at the highest quality). */
+private const val LOW_SPACE_BYTES = 100L * 1024 * 1024
 
 /** Timer, level meter and the record / pause / stop buttons. Also used when another app asks for a recording. */
 @Composable
@@ -101,6 +108,11 @@ fun RecordPanel(onSaved: (Recording) -> Unit, showQuality: Boolean = true) {
     var confirmDiscard by remember { mutableStateOf(false) }
     var asked by remember { mutableIntStateOf(0) }
     var micDenied by remember { mutableStateOf(false) }
+    // A heads-up when the phone's storage is nearly full (looked at again whenever recording starts or stops).
+    // It only warns: recording is never blocked by it.
+    val lowSpace by produceState(false, state.status) {
+        value = withContext(Dispatchers.IO) { runCatching { c.recordings.dir.usableSpace < LOW_SPACE_BYTES }.getOrDefault(false) }
+    }
 
     LaunchedEffect(state.status) {
         while (state.status == Status.RECORDING) {
@@ -158,6 +170,9 @@ fun RecordPanel(onSaved: (Recording) -> Unit, showQuality: Boolean = true) {
         if (micDenied) {
             WarningCard(stringResource(R.string.mic_denied), Icons.Outlined.MicOff, Modifier.clickable { openAppSettings(context) })
         }
+        if (lowSpace) {
+            WarningCard(stringResource(R.string.low_space), Icons.Outlined.Storage)
+        }
         CtrlHeroCard(
             label = stringResource(
                 when (state.status) {
@@ -178,7 +193,7 @@ fun RecordPanel(onSaved: (Recording) -> Unit, showQuality: Boolean = true) {
                 color = CtrlColors.OnAccent,
                 maxLines = 1,
             )
-            Levels(state.levels, Modifier.fillMaxWidth().height(64.dp))
+            LiveLevels(Modifier.fillMaxWidth().height(64.dp))
         }
 
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -213,6 +228,16 @@ fun RecordPanel(onSaved: (Recording) -> Unit, showQuality: Boolean = true) {
             },
         )
     }
+}
+
+/**
+ * The waveform while recording. Watching the levels is what keeps the recorder's level meter running, and this
+ * only watches while the screen is showing, so the meter rests with the screen off or in another app.
+ */
+@Composable
+private fun LiveLevels(modifier: Modifier) {
+    val levels by RecorderService.levels.collectAsStateWithLifecycle()
+    Levels(levels, modifier)
 }
 
 /** Loudness bars, newest on the right. */

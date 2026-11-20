@@ -27,6 +27,7 @@
     <string name="record_hint">Recording keeps going with the screen off or in another app; the notification has Pause and Stop.</string>
     <string name="record_failed">Couldn\'t record. Another app may be using the microphone.</string>
     <string name="mic_denied">RecorderCtrl needs the microphone permission to record. Tap to open its permissions.</string>
+    <string name="low_space">The phone\'s storage is almost full (less than 100 MB free). A long recording may not fit.</string>
     <string name="record_for_app">Record for an app</string>
     <string name="default_name">Recording %1$s</string>
 

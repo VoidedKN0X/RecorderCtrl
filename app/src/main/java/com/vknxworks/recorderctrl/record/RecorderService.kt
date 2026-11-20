@@ -38,8 +38,6 @@ data class RecState(
     val accumulatedMs: Long = 0L,
     /** elapsedRealtime when the current stretch started; 0 while paused. */
     val runningSince: Long = 0L,
-    /** The last few seconds of loudness, 0..1, newest last. */
-    val levels: List<Float> = emptyList(),
     val part: File? = null,
 ) {
     fun elapsed(now: Long = SystemClock.elapsedRealtime()): Long = accumulatedMs + if (runningSince > 0) (now - runningSince).coerceAtLeast(0) else 0
@@ -63,18 +61,49 @@ class RecorderService : Service() {
     private val handler = Handler(Looper.getMainLooper())
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
 
+    /** True while [meter] is scheduled. */
+    private var metering = false
+
+    /**
+     * The level meter: 20 readings a second for the waveform on the Record screen. It only runs while it has
+     * something to show and someone to show it to (see [updateMeter]); the recording itself doesn't depend on it.
+     */
     private val meter = object : Runnable {
         override fun run() {
+            if (!metering) return
             val r = recorder ?: return
-            val s = _state.value
-            if (s.status == Status.RECORDING) {
-                val amp = runCatching { r.maxAmplitude }.getOrDefault(0)
-                // Log scale: quiet speech shows, shouting doesn't pin it.
-                val level = if (amp <= 0) 0f else ((20 * log10(amp / 32767.0) + 60) / 60).toFloat().coerceIn(0f, 1f)
-                _state.value = s.copy(levels = (s.levels + level).takeLast(LEVELS))
-            }
+            val amp = runCatching { r.maxAmplitude }.getOrDefault(0)
+            // Log scale: quiet speech shows, shouting doesn't pin it.
+            val level = if (amp <= 0) 0f else ((20 * log10(amp / 32767.0) + 60) / 60).toFloat().coerceIn(0f, 1f)
+            _levels.value = (_levels.value + level).takeLast(LEVELS)
             handler.postDelayed(this, 50)
         }
+    }
+
+    /**
+     * Starts or stops the meter: it runs only while recording (not while paused) and while a screen is showing
+     * the levels. With the screen off or in another app nothing reads the microphone level, so the phone isn't
+     * woken 20 times a second for a waveform nobody sees.
+     */
+    private fun updateMeter() {
+        val r = recorder
+        val want = r != null && _state.value.status == Status.RECORDING && _levels.subscriptionCount.value > 0
+        if (want && !metering) {
+            metering = true
+            // maxAmplitude is the loudest moment since it was last read: drop what built up while nobody looked.
+            runCatching { r?.maxAmplitude }
+            handler.removeCallbacks(meter)
+            handler.postDelayed(meter, 50)
+        } else if (!want && metering) {
+            metering = false
+            handler.removeCallbacks(meter)
+        }
+    }
+
+    override fun onCreate() {
+        super.onCreate()
+        // A screen started or stopped showing the levels.
+        scope.launch { _levels.subscriptionCount.collect { updateMeter() } }
     }
 
     override fun onBind(intent: Intent?): IBinder? = null
@@ -139,13 +168,15 @@ class RecorderService : Service() {
             part.delete()
             _result.value = SaveResult.Failed
             _state.value = RecState()
+            _levels.value = emptyList()
             stopForeground(STOP_FOREGROUND_REMOVE)
             stopSelf()
             return
         }
         recorder = r
-        _state.value = RecState(Status.RECORDING, 0L, SystemClock.elapsedRealtime(), emptyList(), part)
-        handler.post(meter)
+        _levels.value = emptyList()
+        _state.value = RecState(Status.RECORDING, 0L, SystemClock.elapsedRealtime(), part)
+        updateMeter()
     }
 
     private fun audioSource(s: Source): Int = when (s) {
@@ -164,6 +195,7 @@ class RecorderService : Service() {
         if (s.status != Status.RECORDING) return
         if (runCatching { r.pause() }.isFailure) return
         _state.value = s.copy(status = Status.PAUSED, accumulatedMs = s.elapsed(), runningSince = 0L)
+        updateMeter()
         notifyState()
     }
 
@@ -173,6 +205,7 @@ class RecorderService : Service() {
         if (s.status != Status.PAUSED) return
         if (runCatching { r.resume() }.isFailure) return
         _state.value = s.copy(status = Status.RECORDING, runningSince = SystemClock.elapsedRealtime())
+        updateMeter()
         notifyState()
     }
 
@@ -185,6 +218,7 @@ class RecorderService : Service() {
     private fun finish(save: Boolean) {
         val r = recorder
         val s = _state.value
+        metering = false
         handler.removeCallbacks(meter)
         recorder = null
         if (r == null) {
@@ -206,6 +240,7 @@ class RecorderService : Service() {
             }
             _result.value = result
             _state.value = RecState()
+            _levels.value = emptyList()
             stopForeground(STOP_FOREGROUND_REMOVE)
             stopSelf()
         }
@@ -213,8 +248,9 @@ class RecorderService : Service() {
 
     override fun onDestroy() {
         // Android is ending the service while recording: keep what was recorded.
+        metering = false
+        handler.removeCallbacks(meter)
         if (recorder != null) {
-            handler.removeCallbacks(meter)
             val r = recorder
             recorder = null
             runCatching { r?.stop() }
@@ -227,6 +263,7 @@ class RecorderService : Service() {
                 container.appScope.launch { container.recordings.add(part, name, at)?.let { _result.value = SaveResult.Saved(it) } }
             }
             _state.value = RecState()
+            _levels.value = emptyList()
         }
         scope.coroutineContext[kotlinx.coroutines.Job]?.cancel()
         super.onDestroy()
@@ -271,6 +308,13 @@ class RecorderService : Service() {
 
         private val _state = MutableStateFlow(RecState())
         val state: StateFlow<RecState> = _state
+
+        private val _levels = MutableStateFlow<List<Float>>(emptyList())
+        /**
+         * The last few seconds of loudness while recording, 0..1, newest last. Only measured while a screen is
+         * collecting this, so collect it only while it is shown.
+         */
+        val levels: StateFlow<List<Float>> = _levels
 
         private val _result = MutableStateFlow<SaveResult?>(null)
         /** The last save; the screen clears it after showing it. */

@@ -4,6 +4,24 @@ What changed in each RecorderCtrl release. Every release on the [Releases page](
 
 To publish a new version: bump `versionCode` and `versionName` in `app/build.gradle.kts`, add a section here, and push to `main`. Pushes without a version bump only build; they don't make a release.
 
+## Unreleased
+
+Not released yet: these changes are in the code and will ship with the next version. Recording, playback and speech to text work as before.
+
+### Changed
+
+- **Much less battery use on long recordings.** The level meter behind the waveform used to wake the phone 20 times a second for the whole recording, also with the screen off, in another app and while paused: about 72,000 times an hour for a waveform nobody was looking at. It now runs only while you are recording and the Record screen is actually showing. The recording itself is not affected in any way. When you come back to the Record screen the waveform carries on from where it was, and the few seconds from before scroll away.
+- **Smoother lists while recording.** The Recordings list and an open transcript no longer redraw 20 times a second while a recording is running.
+- **Opens with your settings already in place.** RecorderCtrl now waits a few milliseconds (half a second at most) for your saved settings before it draws its first screen, so the Record screen no longer shows the default quality for a moment and then changes.
+
+### New
+
+- **A warning when storage is almost full.** With less than 100 MB free on the phone, the Record screen shows a note that a long recording may not fit. It is only a warning: you can still record.
+
+### Privacy
+
+- **"Hide in screenshots" is on from the very first frame.** The app's window now starts hidden from screenshots and screen recordings, and that is lifted only once your saved settings say the switch is off. Before, the protection was switched on a few frames after the app opened.
+
 ## v0.2.0 (2026-11-13)
 
 Speech to text, on your phone. RecorderCtrl can now turn a recording into text with timestamps, without going online.
