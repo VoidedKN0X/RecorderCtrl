@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Shared Ctrl series strings: the You page, Settings shell and the app lock. App strings are in strings.xml. -->
 <resources>
-    <string name="app_name">RecorderCtrl</string>
+    <string name="app_name" translatable="false">RecorderCtrl</string>
     <string name="group_about">About</string>
     <string name="support_title">Support RecorderCtrl</string>
     <string name="bugs_title">Report a bug</string>

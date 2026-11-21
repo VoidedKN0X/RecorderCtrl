@@ -17,6 +17,8 @@ To publish a new version: bump `versionCode` and `versionName` in `app/build.gra
 - **Transcribe while charging** (Settings → Speech to text, off by default). Recordings that have no transcript yet are transcribed by themselves, oldest first and one at a time, while the phone is charging, with the usual progress notification. Unplugging stops it and it carries on the next time; one that fails or that you cancel is left alone until RecorderCtrl restarts. It needs an imported model and **Unrestricted** battery use (Android only lets an app start this in the background then; Settings links to App info). After a phone restart it's set up again the next time RecorderCtrl runs.
 - **Export and import of settings** (Settings → Export and import). Saves your recording and speech-to-text settings (quality, stereo, microphone mode and choice, pause during calls, keep screen on, language, transcribe while charging) to a JSON file you choose, and imports such a file after showing what you'll get and asking first. Recordings, transcripts, the speech model, the PIN, the app lock and the privacy settings are never in the file and an import never changes them.
 
+- **RecorderCtrl in Dutch.** When your phone is set to Dutch (Nederlands), RecorderCtrl now shows every screen and notification in Dutch (Belgian Dutch, informal "je"); in any other language it stays in English. It follows the phone's language setting (also Android's per-app language), with no language choice inside the app. Technical names (whisper.cpp, ggml, AAC, Opus, WAV), units and the app name stay as they are. New recordings get a Dutch default name ("Opname …") when the phone is in Dutch; existing names don't change.
+
 ### Changed
 
 - The recording notification has a third button, **Add bookmark**.

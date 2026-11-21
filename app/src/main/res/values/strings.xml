@@ -49,7 +49,7 @@
     <string name="delete">Delete</string>
     <string name="delete_title">Delete this recording?</string>
     <string name="delete_body">\"%1$s\" is deleted from RecorderCtrl. Copies you saved or shared are not affected.</string>
-    <string name="speed_x">%1$s×</string>
+    <string name="speed_x" translatable="false">%1$s×</string>
     <string name="today_at">Today %1$s</string>
     <string name="yesterday_at">Yesterday %1$s</string>
     <string name="no_app">No app on this phone can open that</string>
@@ -159,7 +159,7 @@
     <string name="transcribe_busy">Another recording is being transcribed. Wait for it to finish or cancel it.</string>
     <string name="transcribing">Transcribing</string>
     <string name="transcribe_loading_model">Loading the model</string>
-    <string name="transcribe_percent">%1$d%%</string>
+    <string name="transcribe_percent" translatable="false">%1$d%%</string>
     <string name="transcribe_done">Transcript ready</string>
     <string name="transcribe_cancelled">Transcription cancelled</string>
     <string name="transcribe_error_no_model">No speech-to-text model. Import one in Settings.</string>

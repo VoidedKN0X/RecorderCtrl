@@ -26,6 +26,7 @@ Part of the [Ctrl series](#the-ctrl-series) by VKNXWorks.
 - **Recovers cut-off recordings** when the phone was switched off or the app was stopped while recording, where the file can still be read
 - **Works with other apps:** apps that ask for a voice recording get it from RecorderCtrl, with access to that one file only
 - **App lock** with its own PIN and optional fingerprint unlock, and **Hide in screenshots** / **Hide in recent apps** (both off until you turn them on)
+- **English and Dutch**, following your phone's language
 - **Ctrl / Signal look**, shared by every Ctrl app: dark and light, following your phone's dark theme setting, high contrast, one violet accent, Space Grotesk and JetBrains Mono; landscape, tablet and foldable layouts
 
 ## Requirements
