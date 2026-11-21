@@ -29,7 +29,7 @@ object Player {
     private val handler = Handler(Looper.getMainLooper())
     /** For the playback notification: the app's context and the loaded recording's name. */
     private var appContext: Context? = null
-    private var title = 
+    private var title = ""
     private val _state = MutableStateFlow(PlayState())
     val state: StateFlow<PlayState> = _state
 
