@@ -24,6 +24,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.BookmarkAdd
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Mic
 import androidx.compose.material.icons.outlined.MicOff
@@ -52,6 +53,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
@@ -173,17 +175,21 @@ fun RecordPanel(onSaved: (Recording) -> Unit, showQuality: Boolean = true) {
         if (lowSpace) {
             WarningCard(stringResource(R.string.low_space), Icons.Outlined.Storage)
         }
+        if (state.active && state.micFallback) {
+            WarningCard(stringResource(R.string.mic_fallback, stringResource(settings.mic.label)), Icons.Outlined.MicOff)
+        }
         CtrlHeroCard(
             label = stringResource(
                 when (state.status) {
                     Status.RECORDING -> R.string.status_recording
-                    Status.PAUSED -> R.string.status_paused
+                    Status.PAUSED -> if (state.pausedForCall) R.string.status_paused_call else R.string.status_paused
                     Status.SAVING -> R.string.status_saving
                     Status.IDLE -> R.string.status_ready
                 },
             ),
             meta = if (showQuality) {
-                stringResource(settings.quality.label) + (if (settings.stereo) " · " + stringResource(R.string.stereo_short) else "")
+                stringResource(settings.quality.label) + (if (settings.stereo) " · " + stringResource(R.string.stereo_short) else "") +
+                    (if (settings.mic != com.vknxworks.recorderctrl.data.settings.Mic.AUTO) " · " + stringResource(settings.mic.label) else "")
             } else null,
             modifier = Modifier.fillMaxWidth(),
         ) {
@@ -194,6 +200,13 @@ fun RecordPanel(onSaved: (Recording) -> Unit, showQuality: Boolean = true) {
                 maxLines = 1,
             )
             LiveLevels(Modifier.fillMaxWidth().height(64.dp))
+            if (state.bookmarks.isNotEmpty()) {
+                Text(
+                    pluralStringResource(R.plurals.bookmarks_count, state.bookmarks.size, state.bookmarks.size),
+                    style = CtrlType.Data,
+                    color = CtrlColors.OnAccent,
+                )
+            }
         }
 
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -209,6 +222,17 @@ fun RecordPanel(onSaved: (Recording) -> Unit, showQuality: Boolean = true) {
                     BigButton(stringResource(R.string.stop_save), Icons.Outlined.Stop, accent = true, Modifier.weight(1f)) { RecorderService.send(context, RecorderService.ACTION_STOP) }
                 }
                 Status.SAVING -> BigButton(stringResource(R.string.status_saving), Icons.Outlined.Stop, accent = false, Modifier.weight(1f), enabled = false) {}
+            }
+        }
+        if (state.active) {
+            // Mark this moment; the bookmarks are saved with the recording and listed with it to jump back to.
+            com.vknxworks.recorderctrl.ui.components.CtrlSecondaryButton(
+                onClick = { RecorderService.send(context, RecorderService.ACTION_BOOKMARK) },
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Icon(Icons.Outlined.BookmarkAdd, null, Modifier.size(20.dp))
+                Spacer(Modifier.width(10.dp))
+                Text(stringResource(R.string.bookmark), style = MaterialTheme.typography.titleSmall)
             }
         }
         if (state.status == Status.IDLE) {

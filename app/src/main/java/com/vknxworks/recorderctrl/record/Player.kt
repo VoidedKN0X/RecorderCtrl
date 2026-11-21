@@ -27,6 +27,9 @@ object Player {
     private var focus: AudioFocusRequest? = null
     private var am: AudioManager? = null
     private val handler = Handler(Looper.getMainLooper())
+    /** For the playback notification: the app's context and the loaded recording's name. */
+    private var appContext: Context? = null
+    private var title = 
     private val _state = MutableStateFlow(PlayState())
     val state: StateFlow<PlayState> = _state
 
@@ -62,10 +65,14 @@ object Player {
             _state.value = _state.value.copy(playing = false, positionMs = 0L)
             runCatching { it.seekTo(0) }
             abandonFocus()
+            publish()
         }
         mp = p
+        appContext = context.applicationContext
+        title = r.name
         _state.value = PlayState(r.id, false, 0L, p.duration.toLong().coerceAtLeast(0), _state.value.speed)
         resume(context)
+        publish()
     }
 
     /** Plays [r] from [ms] (a tapped transcript line): loads it first when another recording is loaded. */
@@ -94,6 +101,24 @@ object Player {
         _state.value = _state.value.copy(playing = true)
         handler.removeCallbacks(ticker)
         handler.post(ticker)
+        publish()
+    }
+
+    /** Carries on with the loaded recording (from the playback notification). */
+    fun resumeLoaded(context: Context) {
+        if (mp != null) resume(context)
+    }
+
+    /** Moves [deltaMs] forward (or back, when negative) in the loaded recording. */
+    fun skip(deltaMs: Long) {
+        val p = mp ?: return
+        val now = runCatching { p.currentPosition.toLong() }.getOrDefault(_state.value.positionMs)
+        seek((now + deltaMs).coerceIn(0, _state.value.durationMs))
+    }
+
+    private fun publish() {
+        val ctx = appContext ?: return
+        PlaybackControls.publish(ctx, _state.value, title)
     }
 
     fun pause() {
@@ -101,18 +126,21 @@ object Player {
         runCatching { if (p.isPlaying) p.pause() }
         _state.value = _state.value.copy(playing = false, positionMs = runCatching { p.currentPosition.toLong() }.getOrDefault(_state.value.positionMs))
         abandonFocus()
+        publish()
     }
 
     fun seek(ms: Long) {
         val p = mp ?: return
         runCatching { p.seekTo(ms.coerceIn(0, _state.value.durationMs).toInt()) }
         _state.value = _state.value.copy(positionMs = ms)
+        publish()
     }
 
     fun setSpeed(speed: Float) {
         _state.value = _state.value.copy(speed = speed)
         val p = mp ?: return
         if (_state.value.playing) runCatching { p.playbackParams = PlaybackParams().setSpeed(speed) }
+        publish()
     }
 
     fun stop() {
@@ -121,6 +149,7 @@ object Player {
         mp = null
         _state.value = PlayState(speed = _state.value.speed)
         abandonFocus()
+        appContext?.let { PlaybackControls.clear(it) }
     }
 
     /** Stops if [id] is the recording that's loaded (it was deleted). */

@@ -50,21 +50,27 @@ class TranscribeService : Service() {
     private var job: Job? = null
     @Volatile private var session: WhisperSession? = null
     private var wakeLock: PowerManager.WakeLock? = null
+    /** Started by "Transcribe while charging": unplugging the phone cancels it. */
+    private var auto = false
+    private var unplugged = false
+    private var unplugReceiver: android.content.BroadcastReceiver? = null
 
     override fun onBind(intent: Intent?): IBinder? = null
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         when (intent?.action) {
-            ACTION_START -> start(intent.getLongExtra(EXTRA_ID, -1L), intent.getStringExtra(EXTRA_LANGUAGE) ?: "auto")
+            ACTION_START -> start(intent.getLongExtra(EXTRA_ID, -1L), intent.getStringExtra(EXTRA_LANGUAGE) ?: "auto", intent.getBooleanExtra(EXTRA_AUTO, false))
             ACTION_CANCEL -> cancel()
             else -> if (job == null) stopSelf()
         }
         return START_NOT_STICKY
     }
 
-    private fun start(id: Long, language: String) {
+    private fun start(id: Long, language: String, auto: Boolean) {
         if (job != null) return
         cancelled = false
+        this.auto = auto
+        unplugged = false
         lastShown = -1
         val r = container.recordings.list.value.firstOrNull { it.id == id }
         if (r == null) {
@@ -76,9 +82,24 @@ class TranscribeService : Service() {
         try {
             startForeground(NOTIFICATION_ID, progressNotification(first), ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PROCESSING)
         } catch (e: Exception) {
-            _outcome.value = TranscribeOutcome.Failed(r.id, TranscribeError.FAILED)
+            // An automatic one that Android didn't allow to start is simply tried again another time.
+            if (!auto) _outcome.value = TranscribeOutcome.Failed(r.id, TranscribeError.FAILED)
             stopSelf()
             return
+        }
+        if (auto) {
+            val rcv = object : android.content.BroadcastReceiver() {
+                override fun onReceive(context: Context, intent: Intent) {
+                    unplugged = true
+                    cancel()
+                }
+            }
+            runCatching {
+                androidx.core.content.ContextCompat.registerReceiver(
+                    this, rcv, android.content.IntentFilter(Intent.ACTION_POWER_DISCONNECTED), androidx.core.content.ContextCompat.RECEIVER_NOT_EXPORTED,
+                )
+                unplugReceiver = rcv
+            }
         }
         _state.value = first
         wakeLock = getSystemService(PowerManager::class.java)
@@ -181,6 +202,14 @@ class TranscribeService : Service() {
 
     private fun finish(outcome: TranscribeOutcome) {
         val name = _state.value?.name.orEmpty()
+        unplugReceiver?.let { runCatching { unregisterReceiver(it) } }
+        unplugReceiver = null
+        if (auto) {
+            // Failed, or cancelled by you: don't try that one again in this run. Then on to the next one while the
+            // phone charges (after unplugging: the next time it's plugged in).
+            if (outcome is TranscribeOutcome.Failed || (outcome is TranscribeOutcome.Cancelled && !unplugged)) AutoTranscribe.skip(outcome.recordingId)
+            AutoTranscribe.schedule(this)
+        }
         _state.value = null
         _outcome.value = outcome
         job = null
@@ -198,6 +227,8 @@ class TranscribeService : Service() {
 
     override fun onDestroy() {
         cancelled = true
+        unplugReceiver?.let { runCatching { unregisterReceiver(it) } }
+        unplugReceiver = null
         session?.cancel()
         wakeLock?.let { if (it.isHeld) it.release() }
         if (_state.value != null) _state.value = null
@@ -258,6 +289,7 @@ class TranscribeService : Service() {
         private const val ACTION_CANCEL = "com.vknxworks.recorderctrl.TRANSCRIBE_CANCEL"
         private const val EXTRA_ID = "id"
         private const val EXTRA_LANGUAGE = "language"
+        private const val EXTRA_AUTO = "auto"
 
         /** Five minutes of 16 kHz audio (about 19 MB) per pass, so long recordings never need all their audio in memory. */
         private const val CHUNK_SAMPLES = 5 * 60 * AudioDecoder.SAMPLE_RATE
@@ -272,11 +304,13 @@ class TranscribeService : Service() {
         /** The last transcription's end; the screen clears it after showing it. */
         val outcome: MutableStateFlow<TranscribeOutcome?> = _outcome
 
-        fun start(context: Context, r: Recording, language: String) {
+        /** [auto]: started by "Transcribe while charging" (a failure to start is then not shown). True when it started. */
+        fun start(context: Context, r: Recording, language: String, auto: Boolean = false): Boolean {
             val i = Intent(context, TranscribeService::class.java).setAction(ACTION_START)
-                .putExtra(EXTRA_ID, r.id).putExtra(EXTRA_LANGUAGE, language)
-            runCatching { context.startForegroundService(i) }
-                .onFailure { _outcome.value = TranscribeOutcome.Failed(r.id, TranscribeError.FAILED) }
+                .putExtra(EXTRA_ID, r.id).putExtra(EXTRA_LANGUAGE, language).putExtra(EXTRA_AUTO, auto)
+            return runCatching { context.startForegroundService(i) }
+                .onFailure { if (!auto) _outcome.value = TranscribeOutcome.Failed(r.id, TranscribeError.FAILED) }
+                .isSuccess
         }
 
         fun cancel(context: Context) {

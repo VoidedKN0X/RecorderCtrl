@@ -12,6 +12,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.HelpOutline
+import androidx.compose.material.icons.outlined.BatteryAlert
+import androidx.compose.material.icons.outlined.BatteryChargingFull
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.FileOpen
 import androidx.compose.material.icons.outlined.Language
@@ -171,6 +173,39 @@ fun TranscriptionGroup() {
                 showChevron = true,
                 onClick = { pickLanguage = true },
             )
+            // Transcribe recordings without a transcript by themselves while the phone charges.
+            com.vknxworks.recorderctrl.ui.components.GroupSwitch(
+                stringResource(R.string.auto_transcribe),
+                stringResource(R.string.auto_transcribe_sub),
+                settings.autoTranscribe,
+                Icons.Outlined.BatteryChargingFull,
+            ) { on ->
+                c.appScope.launch {
+                    c.settings.update { it.copy(autoTranscribe = on) }
+                    if (on) com.vknxworks.recorderctrl.transcribe.AutoTranscribe.schedule(context, on = true)
+                    else com.vknxworks.recorderctrl.transcribe.AutoTranscribe.cancel(context)
+                }
+            }
+            if (settings.autoTranscribe) {
+                var tick by remember { androidx.compose.runtime.mutableIntStateOf(0) }
+                androidx.lifecycle.compose.LifecycleEventEffect(androidx.lifecycle.Lifecycle.Event.ON_RESUME) { tick++ }
+                val unrestricted = remember(tick) {
+                    context.getSystemService(android.os.PowerManager::class.java)?.isIgnoringBatteryOptimizations(context.packageName) == true
+                }
+                if (!unrestricted) {
+                    GroupRow(
+                        stringResource(R.string.auto_transcribe_battery),
+                        stringResource(R.string.auto_transcribe_battery_sub),
+                        icon = Icons.Outlined.BatteryAlert,
+                        iconTint = CtrlColors.Warning,
+                        showChevron = true,
+                        onClick = { AppLock.expectReturn(); com.vknxworks.recorderctrl.ui.common.openAppSettings(context) },
+                    )
+                }
+                if (m == null) {
+                    Text(stringResource(R.string.auto_transcribe_no_model), style = MaterialTheme.typography.bodySmall, color = CtrlColors.Muted, modifier = Modifier.padding16())
+                }
+            }
         }
         if (m != null) {
             GroupRow(

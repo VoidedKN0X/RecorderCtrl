@@ -18,6 +18,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -57,6 +58,11 @@ class AppContainer(val context: Context) {
             transcripts.load()
         }
         appScope.launch { models.load() }
+        // "Transcribe while charging": the job isn't kept over a restart, so it's set up again here.
+        appScope.launch {
+            settings.loaded.first { it }
+            com.vknxworks.recorderctrl.transcribe.AutoTranscribe.schedule(context)
+        }
         AppLock.onLocked = { onLocked() }
     }
 

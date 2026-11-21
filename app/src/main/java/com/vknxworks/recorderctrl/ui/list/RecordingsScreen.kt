@@ -23,6 +23,8 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.outlined.Bookmark
+import androidx.compose.material.icons.outlined.ContentCut
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.GraphicEq
 import androidx.compose.material.icons.outlined.Pause
@@ -79,7 +81,10 @@ import com.vknxworks.recorderctrl.ui.theme.Gutter
 import com.vknxworks.recorderctrl.transcribe.TranscribeJob
 import com.vknxworks.recorderctrl.transcribe.TranscribeService
 import com.vknxworks.recorderctrl.ui.nav.LocalNavigator
+import com.vknxworks.recorderctrl.ui.nav.EditRoute
 import com.vknxworks.recorderctrl.ui.nav.TranscriptRoute
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
 import com.vknxworks.recorderctrl.ui.transcript.RunningCard
 import com.vknxworks.recorderctrl.ui.transcript.TranscribeDialog
 import com.vknxworks.recorderctrl.ui.transcript.TranscribeOutcomeToast
@@ -166,6 +171,8 @@ fun RecordingsScreen() {
                 },
                 onRename = { renaming = r },
                 onDelete = { deleting = r },
+                onJump = { ms -> if (!rec.active) { open = r.id; Player.playFrom(context, r, c.recordings.file(r), ms) } },
+                onEdit = { if (!rec.active) nav.navigate(EditRoute(r.id)) },
                 modifier = Modifier.padding(horizontal = Gutter, vertical = 5.dp),
             )
         }
@@ -215,7 +222,8 @@ private fun RecordingCard(
     hasTranscript: Boolean, snippet: String?, running: TranscribeJob?,
     onTranscribe: () -> Unit, onTranscript: () -> Unit,
     onToggleOpen: () -> Unit, onPlay: () -> Unit, onSeek: (Long) -> Unit, onSpeed: (Float) -> Unit,
-    onShare: () -> Unit, onSave: () -> Unit, onRename: () -> Unit, onDelete: () -> Unit, modifier: Modifier,
+    onShare: () -> Unit, onSave: () -> Unit, onRename: () -> Unit, onDelete: () -> Unit,
+    onJump: (Long) -> Unit, onEdit: () -> Unit, modifier: Modifier,
 ) {
     val context = LocalContext.current
     Column(
@@ -274,10 +282,28 @@ private fun RecordingCard(
                         .padding(horizontal = 10.dp, vertical = 6.dp),
                 ) { Text(stringResource(R.string.speed_x, speed.toString().removeSuffix(".0")), style = CtrlType.LabelStrong, color = CtrlColors.Text) }
             }
+            if (r.bookmarks.isNotEmpty()) {
+                // Bookmarks set while recording: tap one to play from there.
+                Row(
+                    Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Icon(Icons.Outlined.Bookmark, stringResource(R.string.bookmarks), Modifier.size(18.dp), tint = CtrlColors.Muted)
+                    r.bookmarks.forEach { ms ->
+                        Box(
+                            Modifier.clip(CtrlShapes.Chip).border(1.dp, CtrlColors.ControlOutline, CtrlShapes.Chip)
+                                .clickable(enabled = canPlay, role = Role.Button) { onJump(ms) }
+                                .padding(horizontal = 10.dp, vertical = 6.dp),
+                        ) { Text(formatDuration(ms), style = CtrlType.LabelStrong, color = if (canPlay) CtrlColors.Text else CtrlColors.Inactive) }
+                    }
+                }
+            }
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 CtrlSquareButton(Icons.Outlined.Share, stringResource(R.string.share), onClick = onShare)
                 CtrlSquareButton(Icons.Outlined.SaveAlt, stringResource(R.string.save_copy), onClick = onSave)
                 CtrlSquareButton(Icons.Outlined.Edit, stringResource(R.string.rename), onClick = onRename)
+                CtrlSquareButton(Icons.Outlined.ContentCut, stringResource(R.string.edit_title), onClick = onEdit, enabled = canPlay)
                 Spacer(Modifier.weight(1f))
                 CtrlSquareButton(Icons.Outlined.Delete, stringResource(R.string.delete), onClick = onDelete, tint = CtrlColors.Error)
             }

@@ -4,6 +4,23 @@ What changed in each RecorderCtrl release. Every release on the [Releases page](
 
 To publish a new version: bump `versionCode` and `versionName` in `app/build.gradle.kts`, add a section here, and push to `main`. Pushes without a version bump only build; they don't make a release.
 
+## Unreleased
+
+### New
+
+- **Bookmarks while recording.** While recording, tap **Add bookmark** on the Record screen or **Add bookmark** in the recording notification to mark that moment (at most one a second). The Record screen counts them, they're saved with the recording, and the recording's player in the Recordings tab lists them: tap one to play from there. A recording recovered after a crash has no bookmarks. Bookmarks are stored in the encrypted list of recordings.
+- **Pause during calls** (Settings → Recording, on by default). While the phone rings or a phone or internet call is going on, a recording pauses by itself ("Paused for a call") and carries on when the call is over, unless you pressed Pause or Resume yourself in the meantime. RecorderCtrl only looks at Android's audio mode for this; it gets no phone permission and learns nothing about the call.
+- **Microphone choice** (Settings → Recording → Microphone): Automatic (as before), Phone, Wired or USB, or Bluetooth. A Bluetooth headset's microphone is recorded in mono with voice processing, because that's the only way Android offers it. If the microphone you chose isn't connected when you start, the recording uses the phone's own choice and the Record screen says so. Needs confirming on your phone, especially Bluetooth.
+- **Lossless quality.** A new **Lossless** option records 16-bit PCM WAV at 48 kHz (about 330 MB an hour, 660 MB in stereo), with nothing thrown away. A lossless recording that's cut off by a crash or power loss is repaired and recovered like the others. WAV files stop just before their 4 GB limit (about 6 hours in stereo) and are saved.
+- **Trim and cut.** The scissors in a recording's player open **Trim or cut**: pick a part with the slider (and nudge the start and end a second at a time), play it, then **Keep only the selection** or **Remove the selection**. The result is saved as a new recording ("… (trimmed)" or "… (cut)") with the bookmarks moved along; the original stays as it is, so delete it yourself if you don't need it. Nothing is re-encoded: WAV is cut to the sample, .m4a and .ogg to the nearest audio packet (about 20 ms).
+- **Playback controls in the notification.** While a recording is loaded in the player, a notification (and Android's media controls) has play/pause and 10 seconds back or forward; swipe it away to stop. On the lock screen it only says "Playing a recording". While the app lock is locked it can pause and stop but not start playback.
+- **Transcribe while charging** (Settings → Speech to text, off by default). Recordings that have no transcript yet are transcribed by themselves, oldest first and one at a time, while the phone is charging, with the usual progress notification. Unplugging stops it and it carries on the next time; one that fails or that you cancel is left alone until RecorderCtrl restarts. It needs an imported model and **Unrestricted** battery use (Android only lets an app start this in the background then; Settings links to App info). After a phone restart it's set up again the next time RecorderCtrl runs.
+- **Export and import of settings** (Settings → Export and import). Saves your recording and speech-to-text settings (quality, stereo, microphone mode and choice, pause during calls, keep screen on, language, transcribe while charging) to a JSON file you choose, and imports such a file after showing what you'll get and asking first. Recordings, transcripts, the speech model, the PIN, the app lock and the privacy settings are never in the file and an import never changes them.
+
+### Changed
+
+- The recording notification has a third button, **Add bookmark**.
+
 ## v0.4.0 (2026-11-21)
 
 Built and checked by CI only: nothing in this release had been run on a phone when it was published. It is the first release built with the new build tools (Android Gradle Plugin 9, stricter code shrinking), so update over your installed version and check that your data and settings are still there.

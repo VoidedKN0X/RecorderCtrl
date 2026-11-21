@@ -191,6 +191,12 @@ class Transcripts(private val recordings: Recordings, private val keys: DataKeyS
          */
         val fileLock = Any()
 
+        /** Whether a recording has a transcript (or one kept aside that can't be opened). Reads the folder. */
+        fun hasAny(dir: File, recordingFile: String): Boolean {
+            val prefix = recordingFile + SUFFIX
+            return dir.listFiles().orEmpty().any { it.isFile && it.name.startsWith(prefix) && !it.name.endsWith(".new") }
+        }
+
         /** True for a transcript file (or a temporary or set-aside copy of one), which isn't a recording. */
         fun isTranscriptFile(name: String) = name.contains(SUFFIX)
 

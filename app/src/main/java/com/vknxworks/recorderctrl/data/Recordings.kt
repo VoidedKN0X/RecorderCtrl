@@ -28,6 +28,8 @@ data class Recording(
     val durationMs: Long,
     val sizeBytes: Long,
     val mime: String,
+    /** Moments marked while recording (ms from the start), in order. */
+    val bookmarks: List<Long> = emptyList(),
 )
 
 /**
@@ -43,6 +45,9 @@ class Recordings(private val context: Context, private val keys: DataKeyStore) {
     private val lock = Any()
     private val _list = MutableStateFlow<List<Recording>>(emptyList())
     val list: StateFlow<List<Recording>> = _list
+    private val _loaded = MutableStateFlow(false)
+    /** True once the recordings have been read at least once since the app started. */
+    val loaded: StateFlow<Boolean> = _loaded
 
     val dir: File get() = File(context.filesDir, "recordings").apply { mkdirs() }
     private val indexFile get() = File(context.filesDir, INDEX)
@@ -83,6 +88,8 @@ class Recordings(private val context: Context, private val keys: DataKeyStore) {
             }
             // A recording interrupted by a crash or power loss: keep it if Android can still read it.
             dir.listFiles().orEmpty().filter { it.name.endsWith(".part") && it.absolutePath != active?.absolutePath }.forEach { part ->
+                // A lossless recording's header only has its sizes from a few seconds before it was cut off.
+                if (part.name.endsWith(".wav.part")) com.vknxworks.recorderctrl.record.WavFormat.repair(part)
                 if (durationOf(part) <= 0 || !part.renameTo(File(dir, part.name.removeSuffix(".part")))) part.delete()
             }
             val known = saved.filter { File(dir, it.file).isFile }
@@ -96,6 +103,7 @@ class Recordings(private val context: Context, private val keys: DataKeyStore) {
                 }
             val all = (known + found).distinctBy { it.file }.sortedByDescending { it.createdAt }
             _list.value = all
+            _loaded.value = true
             if (all != onDisk) {
                 if (write(all)) recovered.forEach { runCatching { it.first.delete() } }
             } else if (bytes != null && !wasSealed && key != null) {
@@ -176,7 +184,7 @@ class Recordings(private val context: Context, private val keys: DataKeyStore) {
     fun newPartFile(ext: String, createdAt: Long): File = File(dir, "rec_$createdAt.$ext.part")
 
     /** Adds a finished recording; returns it, or null when the file is empty or unreadable. */
-    suspend fun add(part: File, name: String, createdAt: Long): Recording? = withContext(Dispatchers.IO) {
+    suspend fun add(part: File, name: String, createdAt: Long, bookmarks: List<Long> = emptyList()): Recording? = withContext(Dispatchers.IO) {
         val target = File(dir, part.name.removeSuffix(".part"))
         if (!part.renameTo(target)) return@withContext null
         val d = durationOf(target)
@@ -184,10 +192,28 @@ class Recordings(private val context: Context, private val keys: DataKeyStore) {
             target.delete()
             return@withContext null
         }
-        val r = Recording(createdAt, target.name, name, createdAt, d, target.length(), mimeOf(target.name))
+        val r = Recording(createdAt, target.name, name, createdAt, d, target.length(), mimeOf(target.name), bookmarks.filter { it in 0..d }.distinct().sorted())
         change { it.filter { x -> x.file != r.file } + r }
         r
     }
+
+    /**
+     * Trims or cuts [r] into a new recording named [name] (the original stays as it is). Bookmarks move along.
+     * Returns the new recording, or null when it couldn't be made (nothing is left behind then).
+     */
+    suspend fun edit(r: Recording, mode: com.vknxworks.recorderctrl.edit.EditMath.Mode, startMs: Long, endMs: Long, name: String): Recording? =
+        withContext(Dispatchers.IO) {
+            val now = System.currentTimeMillis().coerceAtLeast(r.createdAt + 1)
+            val part = newPartFile(r.file.substringAfterLast('.', "m4a"), now)
+            try {
+                com.vknxworks.recorderctrl.edit.AudioEditor.edit(file(r), part, mode, startMs, endMs)
+            } catch (e: Exception) {
+                part.delete()
+                return@withContext null
+            }
+            val marks = com.vknxworks.recorderctrl.edit.EditMath.mapBookmarks(mode, r.bookmarks, startMs, endMs)
+            add(part, name.take(80), now, marks)
+        }
 
     /** Renames a recording. The index is written (and encrypted) on a background thread, never on the screen's thread. */
     suspend fun rename(r: Recording, name: String) = withContext(Dispatchers.IO) {
@@ -253,6 +279,7 @@ class Recordings(private val context: Context, private val keys: DataKeyStore) {
         fun mimeOf(name: String): String = when (name.substringAfterLast('.').lowercase()) {
             "ogg", "opus" -> "audio/ogg"
             "m4a", "mp4", "aac" -> "audio/mp4"
+            "wav" -> "audio/wav"
             else -> "audio/*"
         }
 

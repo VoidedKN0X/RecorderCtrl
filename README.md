@@ -13,10 +13,15 @@ Part of the [Ctrl series](#the-ctrl-series) by VKNXWorks.
 ## Features
 
 - **Works fully offline.** RecorderCtrl doesn't have the internet permission and never goes online
-- **Recording** with a timer and live level meter, Pause and Resume, Stop and save, and Discard. It keeps going with the screen off or in another app, with Pause and Stop in the notification
-- **Quality:** Standard and High (AAC .m4a) or Small (Opus .ogg), mono or stereo, and the microphone tuned for normal sound, voice (less noise and echo) or unprocessed for music
-- **Recordings:** a list with name, date, length and size, search, and a player with seeking and 0.75× to 2× speed
-- **Speech to text on the phone** with [whisper.cpp](https://github.com/ggml-org/whisper.cpp): transcribe a recording in the background with progress and Cancel, in the language you pick or detected automatically. The transcript shows every line with its time (tap one to play from there), is searchable from the Recordings tab, and exports as .txt or .srt. You import the model file yourself (RecorderCtrl never downloads anything); nothing is uploaded
+- **Recording** with a timer and live level meter, Pause and Resume, Stop and save, and Discard. It keeps going with the screen off or in another app, with Pause, Bookmark and Stop in the notification
+- **Bookmarks while recording:** mark a moment with one tap (on the Record screen or in the notification); the recording's player lists them to jump straight there
+- **Pauses during calls:** while the phone rings or a phone or internet call is going on, the recording pauses, and carries on after it (can be switched off)
+- **Quality:** Standard and High (AAC .m4a), Small (Opus .ogg) or **Lossless** (16-bit WAV), mono or stereo, and the microphone tuned for normal sound, voice (less noise and echo) or unprocessed for music
+- **Microphone choice:** the phone's own, a wired or USB microphone, or a Bluetooth headset's microphone; if the one you chose isn't connected, RecorderCtrl says so and uses the phone's choice
+- **Recordings:** a list with name, date, length and size, search, and a player with seeking and 0.75× to 2× speed, with **playback controls in the notification** (and Android's media controls): play or pause, 10 seconds back or forward
+- **Trim and cut:** keep only a part of a recording, or remove a part, without re-encoding; the result is saved as a new recording next to the original
+- **Speech to text on the phone** with [whisper.cpp](https://github.com/ggml-org/whisper.cpp): transcribe a recording in the background with progress and Cancel, in the language you pick or detected automatically. The transcript shows every line with its time (tap one to play from there), is searchable from the Recordings tab, and exports as .txt or .srt. You import the model file yourself (RecorderCtrl never downloads anything); nothing is uploaded. Optionally **transcribe while charging**: recordings without a transcript are done by themselves, one at a time, while the phone charges
+- **Export and import** of RecorderCtrl's settings to a file you choose (no recordings, transcripts, model, PIN or privacy settings)
 - **Private by default:** recordings are stored in RecorderCtrl's own storage, which other apps can't read. Share one, or save a copy to the phone's Recordings folder, when you want to
 - **Recovers cut-off recordings** when the phone was switched off or the app was stopped while recording, where the file can still be read
 - **Works with other apps:** apps that ask for a voice recording get it from RecorderCtrl, with access to that one file only
@@ -47,9 +52,10 @@ If the Obtainium button doesn't open the app, add `https://github.com/VoidedKN0X
 ## Getting started
 
 - **Record:** tap Record, allow the microphone, then Pause or Stop and save. The bin discards the recording.
-- **Recordings:** tap a recording to open its player, then play, seek, change the speed, share, save a copy, rename or delete it.
+- **Recordings:** tap a recording to open its player, then play, seek, change the speed, jump to a bookmark, share, save a copy, rename, trim or cut (the scissors), or delete it.
 - **Speech to text:** download a whisper.cpp model such as `ggml-base.bin` (Settings > Speech to text > **Where do I get a model?** opens the page), import it under **Import a model**, then open a recording and tap **Transcribe**. Bigger models (`ggml-small.bin`, `ggml-medium.bin`) are more accurate but slower and need more memory; quantised ones (`q5_1`, `q8_0`) are smaller and faster.
-- **Settings** (profile picture): quality, stereo, the microphone mode, keeping the screen on, and the speech-to-text model and language.
+- **Settings** (profile picture): quality, stereo, the microphone mode and which microphone, pause during calls, keeping the screen on, the speech-to-text model and language, transcribe while charging, and export and import.
+- **Transcribe while charging** needs a model and **Unrestricted** battery use for RecorderCtrl (App info > Battery), because Android only lets an app start the transcription in the background then. After the phone restarts, open RecorderCtrl once to set it up again.
 
 Settings and About are behind your profile picture at the top right of every tab.
 

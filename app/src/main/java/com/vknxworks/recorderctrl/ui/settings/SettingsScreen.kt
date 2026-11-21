@@ -15,6 +15,8 @@ import androidx.compose.material.icons.outlined.Layers
 import androidx.compose.material.icons.outlined.LightMode
 import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.Mic
+import androidx.compose.material.icons.outlined.PhoneInTalk
+import androidx.compose.material.icons.outlined.SettingsVoice
 import androidx.compose.material.icons.outlined.Password
 import androidx.compose.material.icons.outlined.Timer
 import androidx.compose.material.icons.outlined.VisibilityOff
@@ -72,9 +74,17 @@ fun SettingsScreen() {
                     settings.source,
                     icon = Icons.Outlined.Mic,
                 ) { s -> set { it.copy(source = s) } }
+                GroupChoice(
+                    stringResource(R.string.mic_choice),
+                    com.vknxworks.recorderctrl.data.settings.Mic.entries.map { it to stringResource(it.label) + " · " + stringResource(it.detail) },
+                    settings.mic,
+                    icon = Icons.Outlined.SettingsVoice,
+                ) { m -> set { it.copy(mic = m) } }
+                GroupSwitch(stringResource(R.string.pause_on_call), stringResource(R.string.pause_on_call_sub), settings.pauseOnCall, Icons.Outlined.PhoneInTalk) { on -> set { it.copy(pauseOnCall = on) } }
                 GroupSwitch(stringResource(R.string.keep_screen_on), stringResource(R.string.keep_screen_on_sub), settings.keepScreenOn, Icons.Outlined.LightMode) { on -> set { it.copy(keepScreenOn = on) } }
             }
             TranscriptionGroup()
+            BackupGroup()
             PrivacyAndSecurityGroup(settings)
         }
     }

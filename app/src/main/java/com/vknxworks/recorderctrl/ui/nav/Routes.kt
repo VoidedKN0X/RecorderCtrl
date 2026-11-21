@@ -12,3 +12,4 @@ import kotlinx.serialization.Serializable
 
 // A recording's transcript
 @Serializable data class TranscriptRoute(val id: Long)
+@Serializable data class EditRoute(val id: Long)

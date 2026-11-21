@@ -4,8 +4,11 @@ Voice recorder in the VKNXWorks Ctrl series. Kotlin, Jetpack Compose, Material 3
 
 ## Layout
 
-- `record/RecorderService.kt`: MediaRecorder in a foreground service (type microphone), state as a StateFlow, the notification with Pause/Stop.
-- `record/Player.kt`: MediaPlayer with audio focus and speed.
+- `record/RecorderService.kt`: a foreground service (type microphone) that records through `record/Capture.kt` (`MediaCapture`: MediaRecorder for AAC/Opus; `WavCapture`: AudioRecord to 16-bit WAV for Lossless, header sizes refreshed every 2 s, `WavFormat.repair` on recovery), state as a StateFlow (with bookmarks), the notification with Pause/Bookmark/Stop. Microphone choice: `setPreferredDevice`; Bluetooth through `AudioManager.setCommunicationDevice` + VOICE_COMMUNICATION, cleared at the end. "Pause during calls" listens to `AudioManager.addOnModeChangedListener` (any mode but NORMAL pauses; no phone permission).
+- `record/Player.kt`: MediaPlayer with audio focus and speed. `record/PlaybackControls.kt`: platform `MediaSession` + MediaStyle notification and the non-exported `PlaybackReceiver`; it never starts playback while the app lock is locked.
+- `edit/`: trim and cut without re-encoding (`AudioEditor`: WAV byte copy, MediaExtractor/MediaMuxer packet copy for .m4a/.ogg; `EditMath` is unit-tested). The result is always a new recording; the original is never changed.
+- `transcribe/AutoTranscribe.kt`: "Transcribe while charging", a JobScheduler job (`setRequiresCharging`, not persisted, re-scheduled at app start, after a save and after each automatic transcription) that starts `TranscribeService` with `auto` (unplugging cancels it; a failed start shows nothing).
+- `data/settings/SettingsBackup.kt` + `ui/settings/BackupGroup.kt`: export/import of settings only (never the app lock or privacy settings).
 - `data/Recordings.kt`: files in `filesDir/recordings` (written as `.part`, renamed when saved), the JSON index, recovery of cut-off recordings, Save a copy to MediaStore.
 - `RecordActivity.kt`: RECORD_SOUND for other apps; returns a FileProvider uri with a read grant for that one file.
 - `ui/record`, `ui/list`: the two tabs.

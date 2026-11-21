@@ -22,6 +22,10 @@
     <string name="status_ready">Ready</string>
     <string name="status_recording">Recording</string>
     <string name="status_paused">Paused</string>
+    <string name="status_paused_call">Paused for a call</string>
+    <string name="bookmark">Add bookmark</string>
+    <string name="bookmarks">Bookmarks</string>
+    <string name="mic_fallback">%1$s isn\'t connected, so this recording uses the phone\'s own choice of microphone.</string>
     <string name="status_saving">Saving</string>
     <string name="stereo_short">Stereo</string>
     <string name="record_hint">Recording keeps going with the screen off or in another app; the notification has Pause and Stop.</string>
@@ -52,9 +56,17 @@
 
     <!-- Notification -->
     <string name="ch_recording">Recording</string>
-    <string name="ch_recording_desc">Shows while RecorderCtrl is recording, with Pause and Stop</string>
+    <string name="ch_recording_desc">Shows while RecorderCtrl is recording, with Pause, Bookmark and Stop</string>
+    <string name="ch_playback">Playback</string>
+    <string name="ch_playback_desc">Shows while a recording is loaded in the player, with play, pause and 10 seconds back or forward</string>
+    <string name="play_notif_public">Playing a recording</string>
+    <string name="play_notif_playing">Playing</string>
+    <string name="play_notif_paused">Paused</string>
+    <string name="play_back_10">10 seconds back</string>
+    <string name="play_forward_10">10 seconds forward</string>
     <string name="notif_recording">Recording</string>
     <string name="notif_paused">Recording paused</string>
+    <string name="notif_paused_call">Paused for a call</string>
 
     <!-- Settings -->
     <string name="group_recording">Recording</string>
@@ -75,6 +87,19 @@
     <string name="source_voice_sub">Less background noise and echo, for talks and notes</string>
     <string name="source_unprocessed">Unprocessed</string>
     <string name="source_unprocessed_sub">No filtering, for music</string>
+    <string name="quality_lossless">Lossless</string>
+    <string name="quality_lossless_sub">WAV, 16-bit, about 330 MB an hour (660 MB in stereo)</string>
+    <string name="mic_choice">Microphone</string>
+    <string name="mic_auto">Automatic</string>
+    <string name="mic_auto_sub">The phone picks, as before</string>
+    <string name="mic_builtin">Phone</string>
+    <string name="mic_builtin_sub">The phone\'s own microphone, even with a headset connected</string>
+    <string name="mic_wired">Wired or USB</string>
+    <string name="mic_wired_sub">A headset with a mic on the headphone jack, or a USB-C microphone</string>
+    <string name="mic_bluetooth">Bluetooth</string>
+    <string name="mic_bluetooth_sub">A Bluetooth headset\'s microphone; in mono, with voice processing</string>
+    <string name="pause_on_call">Pause during calls</string>
+    <string name="pause_on_call_sub">While the phone rings or a phone or internet call is going on, the recording pauses, and carries on after it</string>
     <string name="keep_screen_on">Keep screen on</string>
     <string name="keep_screen_on_sub">While recording on the Record screen</string>
 
@@ -85,6 +110,11 @@
 
     <!-- Speech to text: Settings -->
     <string name="group_transcription">Speech to text</string>
+    <string name="auto_transcribe">Transcribe while charging</string>
+    <string name="auto_transcribe_sub">Recordings without a transcript are transcribed by themselves, one at a time, while the phone charges. Unplugging stops it; it carries on next time.</string>
+    <string name="auto_transcribe_battery">Allow unrestricted battery use</string>
+    <string name="auto_transcribe_battery_sub">Needed to start in the background. In App info, open Battery and choose Unrestricted.</string>
+    <string name="auto_transcribe_no_model">Import a model above first; until then nothing is transcribed.</string>
     <string name="transcription_footer">Transcripts are made on this phone with whisper.cpp and a model file you import. Nothing is uploaded: RecorderCtrl has no internet access. Bigger models are more accurate, but slower and need more memory.</string>
     <string name="model">Model</string>
     <string name="model_none">No model yet</string>
@@ -168,6 +198,45 @@
     <string name="notif_transcript_ready">Transcript ready</string>
     <string name="notif_transcript_failed">Couldn\'t transcribe</string>
 
+    <!-- Trim and cut -->
+    <string name="edit_title">Trim or cut</string>
+    <string name="edit_missing">This recording isn\'t there any more</string>
+    <string name="edit_selection">Selection %1$s – %2$s (%3$s)</string>
+    <string name="edit_start">Start</string>
+    <string name="edit_end">End</string>
+    <string name="edit_back_1s">1 second earlier</string>
+    <string name="edit_forward_1s">1 second later</string>
+    <string name="edit_preview">Play the selection</string>
+    <string name="edit_keep">Keep only the selection</string>
+    <string name="edit_remove">Remove the selection</string>
+    <string name="edit_note">The result is saved as a new recording; this one stays as it is. Nothing is re-encoded, so the sound doesn\'t change. In .m4a and .ogg recordings the edges fall on the nearest 20 milliseconds or so.</string>
+    <string name="edit_saving">Saving…</string>
+    <string name="edit_saved">Saved as a new recording</string>
+    <string name="edit_failed">Couldn\'t edit this recording. Nothing was changed.</string>
+    <string name="edit_name_trimmed">%1$s (trimmed)</string>
+    <string name="edit_name_cut">%1$s (cut)</string>
+
+    <!-- Export and import of settings -->
+    <string name="backup_title">Export and import</string>
+    <string name="backup_footer">A file with your recording and speech-to-text settings, to move them to another phone or keep a copy. Recordings, transcripts, the speech model, the app lock and the privacy settings aren\'t in it, and an import never changes them.</string>
+    <string name="backup_save">Export settings</string>
+    <string name="backup_save_sub">Save them to a file you choose</string>
+    <string name="backup_restore">Import settings</string>
+    <string name="backup_restore_sub">Replace them with the ones in a RecorderCtrl settings file</string>
+    <string name="backup_saved">Settings exported</string>
+    <string name="backup_save_failed">Couldn\'t write the file. Nothing was exported.</string>
+    <string name="backup_read_failed">Couldn\'t read the file. Nothing was changed.</string>
+    <string name="backup_not_valid">That isn\'t a RecorderCtrl settings file. Nothing was changed.</string>
+    <string name="backup_too_new">That file comes from a newer RecorderCtrl. Update RecorderCtrl first. Nothing was changed.</string>
+    <string name="backup_restore_title">Replace your settings?</string>
+    <string name="backup_restore_body">Your recording and speech-to-text settings will be replaced by the ones in this file (exported %1$s). After the import:\n\n%2$s\n\nThe app lock and the privacy settings stay as they are.</string>
+    <string name="backup_restore_confirm">Replace</string>
+    <string name="backup_restored">Settings imported</string>
+
+    <plurals name="bookmarks_count">
+        <item quantity="one">%1$d bookmark</item>
+        <item quantity="other">%1$d bookmarks</item>
+    </plurals>
     <plurals name="recordings_count">
         <item quantity="one">%1$d recording</item>
         <item quantity="other">%1$d recordings</item>

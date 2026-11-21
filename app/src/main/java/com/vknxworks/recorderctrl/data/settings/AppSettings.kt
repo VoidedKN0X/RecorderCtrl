@@ -26,6 +26,16 @@ enum class Quality(@StringRes val label: Int, @StringRes val detail: Int) {
     STANDARD(R.string.quality_standard, R.string.quality_standard_sub),
     HIGH(R.string.quality_high, R.string.quality_high_sub),
     OPUS(R.string.quality_opus, R.string.quality_opus_sub),
+    /** 16-bit PCM in a WAV file, recorded with AudioRecord: nothing is thrown away. */
+    LOSSLESS(R.string.quality_lossless, R.string.quality_lossless_sub),
+}
+
+/** Which microphone to record with. A chosen one that isn't connected falls back to the phone's own choice. */
+enum class Mic(@StringRes val label: Int, @StringRes val detail: Int) {
+    AUTO(R.string.mic_auto, R.string.mic_auto_sub),
+    BUILT_IN(R.string.mic_builtin, R.string.mic_builtin_sub),
+    WIRED(R.string.mic_wired, R.string.mic_wired_sub),
+    BLUETOOTH(R.string.mic_bluetooth, R.string.mic_bluetooth_sub),
 }
 
 /** Which microphone processing Android applies. */
@@ -59,6 +69,12 @@ data class AppSettings(
     val hideRecents: Boolean = false,
     /** Speech-to-text: whisper's language code, or "auto" to detect it. */
     val transcribeLanguage: String = "auto",
+    /** The microphone to record with. */
+    val mic: Mic = Mic.AUTO,
+    /** Pause a recording while a phone or internet call is going on (and carry on after it). */
+    val pauseOnCall: Boolean = true,
+    /** Transcribe recordings without a transcript by themselves while the phone is charging. */
+    val autoTranscribe: Boolean = false,
 )
 
 class SettingsRepository(private val context: Context, scope: CoroutineScope) {
@@ -71,6 +87,9 @@ class SettingsRepository(private val context: Context, scope: CoroutineScope) {
         val hideScreenshots = booleanPreferencesKey("hide_screenshots")
         val hideRecents = booleanPreferencesKey("hide_recents")
         val transcribeLanguage = stringPreferencesKey("transcribe_language")
+        val mic = stringPreferencesKey("mic")
+        val pauseOnCall = booleanPreferencesKey("pause_on_call")
+        val autoTranscribe = booleanPreferencesKey("auto_transcribe")
     }
 
     private val prefs: Flow<Preferences> = context.appDataStore.data.catch { e ->
@@ -107,6 +126,9 @@ class SettingsRepository(private val context: Context, scope: CoroutineScope) {
         hideScreenshots = this[K.hideScreenshots] ?: false,
         hideRecents = this[K.hideRecents] ?: false,
         transcribeLanguage = this[K.transcribeLanguage]?.takeIf { it.isNotBlank() && it.length <= 8 } ?: "auto",
+        mic = enumOr(this[K.mic], Mic.AUTO),
+        pauseOnCall = this[K.pauseOnCall] ?: true,
+        autoTranscribe = this[K.autoTranscribe] ?: false,
     )
 
     /** Saves a change. If the phone's storage fails, the change is dropped instead of closing the app. */
@@ -122,6 +144,9 @@ class SettingsRepository(private val context: Context, scope: CoroutineScope) {
                 p[K.hideScreenshots] = s.hideScreenshots
                 p[K.hideRecents] = s.hideRecents
                 p[K.transcribeLanguage] = s.transcribeLanguage
+                p[K.mic] = s.mic.name
+                p[K.pauseOnCall] = s.pauseOnCall
+                p[K.autoTranscribe] = s.autoTranscribe
             }
         } catch (e: IOException) {
             // Nothing to do: the settings stay as they were.

@@ -191,5 +191,6 @@ private fun AppNavHost(navController: NavHostController) {
         composable<YouRoute> { YouScreen() }
         composable<SettingsRoute> { SettingsScreen() }
         composable<TranscriptRoute> { TranscriptScreen(it.toRoute<TranscriptRoute>().id) }
+        composable<EditRoute> { com.vknxworks.recorderctrl.ui.edit.EditScreen(it.toRoute<EditRoute>().id) }
     }
 }

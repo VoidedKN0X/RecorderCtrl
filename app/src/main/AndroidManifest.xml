@@ -77,6 +77,15 @@
             android:exported="false"
             android:foregroundServiceType="mediaProcessing" />
 
+        <!-- The playback notification's buttons (play/pause, 10 s back/forward, stop). Not exported. -->
+        <receiver
+            android:name=".record.PlaybackReceiver"
+            android:exported="false" />
+        <!-- "Transcribe while charging": a job that only runs while the phone charges and starts TranscribeService. -->
+        <service
+            android:name=".transcribe.AutoTranscribeJob"
+            android:exported="false"
+            android:permission="android.permission.BIND_JOB_SERVICE" />
         <!-- Hands one recording at a time to another app, when you share it. -->
         <provider
             android:name="androidx.core.content.FileProvider"
