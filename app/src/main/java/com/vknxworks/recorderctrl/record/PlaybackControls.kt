@@ -67,7 +67,10 @@ object PlaybackControls {
         runCatching {
             s.setMetadata(
                 MediaMetadata.Builder()
-                    .putString(MediaMetadata.METADATA_KEY_TITLE, title)
+                    // Android's media player on the lock screen (and apps with notification access) read the
+                    // session, not the notification's private/public versions: only the generic title goes here.
+                    // The recording's name stays in the notification's own (private) title.
+                    .putString(MediaMetadata.METADATA_KEY_TITLE, app.getString(R.string.play_notif_public))
                     .putLong(MediaMetadata.METADATA_KEY_DURATION, st.durationMs)
                     .build(),
             )

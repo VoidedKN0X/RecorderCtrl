@@ -4,6 +4,19 @@ What changed in each RecorderCtrl release. Every release on the [Releases page](
 
 To publish a new version: bump `versionCode` and `versionName` in `app/build.gradle.kts`, add a section here, and push to `main`. Pushes without a version bump only build; they don't make a release.
 
+## Unreleased
+
+Built and checked by CI only: nothing here has been run on a phone yet.
+
+### Fixed
+
+- **A recording cut short by an error is kept instead of deleted.** When the recorder failed in the middle of a recording (the phone's media service stopped, storage ran full, another app took the microphone), RecorderCtrl tried to stop it, that failed, and the recording was thrown away. Now whatever was recorded up to that moment is saved as a normal recording when it can be played (Opus and Lossless recordings nearly always; an AAC recording that was cut off before it was finished can't be read and is still removed). A Lossless (WAV) recording's header is repaired first, as at start-up recovery. A tap on Stop right after Record, with nothing recorded yet, still saves nothing.
+
+### Security
+
+- **The recording's name no longer shows in Android's media player.** While a recording plays, Android's media controls (in the notification shade and on the lock screen, and apps with notification access) read the name from the playback session, not from RecorderCtrl's notification, so the lock screen could show the recording's name even though the notification itself hides it there. The media controls now only say "Playing a recording". The name still shows in RecorderCtrl's own notification when the phone is unlocked and in the app.
+- **"Forgot PIN?" now asks for your phone's screen lock first.** Resetting RecorderCtrl's app lock deletes the recordings kept in the app, so it now needs your phone's own PIN, pattern, password or a strong fingerprint first; someone who picks up your unlocked phone can't simply reset it. Cancelling the prompt changes nothing. If your phone has no screen lock, the reset works as before, after the confirmation.
+
 ## v0.6.0 (2026-11-21)
 
 Built and checked by CI only: nothing in this release had been run on a phone when it was published.

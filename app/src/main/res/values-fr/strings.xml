@@ -4,7 +4,10 @@
     <string name="app_lock_subtitle">Demander un code PIN de l\'application (et éventuellement votre empreinte) à l\'ouverture de RecorderCtrl. Un enregistrement en cours continue.</string>
     <string name="app_lock_footer">RecorderCtrl fonctionne entièrement hors ligne : pas d\'autorisation Internet, pas d\'analyse ni de suivi. Les enregistrements restent dans son stockage privé jusqu\'à ce que vous les partagiez ou en enregistriez une copie.</string>
     <string name="lock_prompt_subtitle">Vos enregistrements</string>
-    <string name="lock_forgot_body">Le code PIN ne peut pas être récupéré. RecorderCtrl supprimera tous les enregistrements conservés dans l\'application, réinitialisera ses paramètres et désactivera le verrouillage. Les copies enregistrées dans le dossier Recordings ne sont pas supprimées.</string>
+    <string name="lock_forgot_body">Le code PIN ne peut pas être récupéré. RecorderCtrl supprimera tous les enregistrements conservés dans l\'application, réinitialisera ses paramètres et désactivera le verrouillage. Les copies enregistrées dans le dossier Recordings ne sont pas supprimées. Si votre téléphone a un verrouillage d\'écran, vous le confirmerez d\'abord avec celui-ci.</string>
+    <string name="lock_reset_prompt_title">Réinitialiser le verrouillage de RecorderCtrl</string>
+    <string name="lock_reset_prompt_subtitle">Utilisez le verrouillage d\'écran de votre téléphone pour confirmer votre identité</string>
+    <string name="lock_reset_prompt_failed">Impossible d\'afficher le verrouillage d\'écran</string>
     <string name="tab_record">Enregistrer</string>
     <string name="tab_recordings">Enregistrements</string>
     <string name="record">Enregistrer</string>

@@ -29,6 +29,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.File
 import kotlin.math.log10
 
@@ -337,11 +338,18 @@ class RecorderService : Service() {
         val part = s.part
         _state.value = s.copy(status = Status.SAVING, runningSince = 0L)
         scope.launch {
-            val result: SaveResult = when {
-                part == null -> SaveResult.Failed
-                !save -> { part.delete(); SaveResult.Discarded }
-                !stopped -> { part.delete(); SaveResult.Failed }
-                else -> container.recordings.add(part, defaultName(this@RecorderService, createdAt), createdAt, s.bookmarks)?.let { SaveResult.Saved(it) } ?: SaveResult.Failed
+            val result: SaveResult = if (part == null) SaveResult.Failed else when (PartFate.of(save, stopped)) {
+                PartFate.DISCARD -> { part.delete(); SaveResult.Discarded }
+                // The recorder didn't stop cleanly (an error mid-recording, storage full, the microphone taken):
+                // keep what was recorded up to then if it plays. Recordings.add deletes it only when it has no
+                // readable audio (a tap on Stop right after Record, or an .m4a cut off before it was finished).
+                PartFate.SALVAGE -> {
+                    withContext(Dispatchers.IO) { if (part.name.endsWith(".wav.part")) WavFormat.repair(part) }
+                    container.recordings.add(part, defaultName(this@RecorderService, createdAt), createdAt, s.bookmarks)
+                        ?.let { SaveResult.Saved(it) } ?: SaveResult.Failed
+                }
+                PartFate.SAVE -> container.recordings.add(part, defaultName(this@RecorderService, createdAt), createdAt, s.bookmarks)
+                    ?.let { SaveResult.Saved(it) } ?: SaveResult.Failed
             }
             _result.value = result
             if (result is SaveResult.Saved) com.vknxworks.recorderctrl.transcribe.AutoTranscribe.schedule(this@RecorderService)

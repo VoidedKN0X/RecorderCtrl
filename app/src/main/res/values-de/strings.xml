@@ -4,7 +4,10 @@
     <string name="app_lock_subtitle">Beim Öffnen von RecorderCtrl nach einer App-PIN (und optional deinem Fingerabdruck) fragen. Eine laufende Aufnahme läuft weiter.</string>
     <string name="app_lock_footer">RecorderCtrl funktioniert komplett offline: keine Internetberechtigung, keine Analyse, kein Tracking. Aufnahmen bleiben in seinem privaten Speicher, bis du sie teilst oder eine Kopie speicherst.</string>
     <string name="lock_prompt_subtitle">Deine Aufnahmen</string>
-    <string name="lock_forgot_body">Die PIN kann nicht wiederhergestellt werden. RecorderCtrl löscht alle in der App gespeicherten Aufnahmen, setzt seine Einstellungen zurück und schaltet die App-Sperre aus. Kopien, die du im Ordner Recordings gespeichert hast, werden nicht gelöscht.</string>
+    <string name="lock_forgot_body">Die PIN kann nicht wiederhergestellt werden. RecorderCtrl löscht alle in der App gespeicherten Aufnahmen, setzt seine Einstellungen zurück und schaltet die App-Sperre aus. Kopien, die du im Ordner Recordings gespeichert hast, werden nicht gelöscht. Wenn dein Smartphone eine Displaysperre hat, bestätigst du zuerst damit.</string>
+    <string name="lock_reset_prompt_title">App-Sperre von RecorderCtrl zurücksetzen</string>
+    <string name="lock_reset_prompt_subtitle">Bestätige mit der Displaysperre deines Smartphones, dass du es bist</string>
+    <string name="lock_reset_prompt_failed">Displaysperre konnte nicht angezeigt werden</string>
     <string name="tab_record">Aufnehmen</string>
     <string name="tab_recordings">Aufnahmen</string>
     <string name="record">Aufnehmen</string>

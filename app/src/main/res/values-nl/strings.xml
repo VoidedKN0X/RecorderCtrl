@@ -5,7 +5,10 @@
     <string name="app_lock_subtitle">Vraag een app-pincode (en eventueel je vingerafdruk) wanneer je RecorderCtrl opent. Een lopende opname gaat gewoon door.</string>
     <string name="app_lock_footer">RecorderCtrl werkt volledig offline: geen internettoestemming, geen analyse en geen tracking. Opnames blijven in de eigen opslag van de app tot je ze deelt of een kopie bewaart.</string>
     <string name="lock_prompt_subtitle">Je opnames</string>
-    <string name="lock_forgot_body">De pincode kan niet hersteld worden. RecorderCtrl verwijdert alle opnames in de app, zet zijn instellingen terug en zet de app-vergrendeling uit. Kopieën die je in de map Recordings bewaarde, worden niet verwijderd.</string>
+    <string name="lock_forgot_body">De pincode kan niet hersteld worden. RecorderCtrl verwijdert alle opnames in de app, zet zijn instellingen terug en zet de app-vergrendeling uit. Kopieën die je in de map Recordings bewaarde, worden niet verwijderd. Heeft je telefoon een schermvergrendeling, dan bevestig je eerst daarmee.</string>
+    <string name="lock_reset_prompt_title">App-vergrendeling van RecorderCtrl resetten</string>
+    <string name="lock_reset_prompt_subtitle">Bevestig met de schermvergrendeling van je telefoon dat jij het bent</string>
+    <string name="lock_reset_prompt_failed">De schermvergrendeling kon niet getoond worden</string>
 
     <string name="tab_record">Opnemen</string>
     <string name="tab_recordings">Opnames</string>
